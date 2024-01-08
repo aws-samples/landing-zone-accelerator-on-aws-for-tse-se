@@ -14,6 +14,6 @@ mainSteps:
     inputs:
       Service: ec2
       Api: associate_iam_instance_profile
-      IamInstanceProfile: 
+      IamInstanceProfile:
         Name: '{{ IamInstanceProfile }}'
       InstanceId: '{{ InstanceId }}'

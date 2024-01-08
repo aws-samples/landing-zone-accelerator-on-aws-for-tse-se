@@ -127,7 +127,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },
@@ -188,9 +188,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalArn": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}", "arn:${PARTITION}:iam::*:role/AWSA*"
-          ]
+          "aws:PrincipalArn": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },
@@ -208,7 +206,7 @@
         },
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}", "arn:${PARTITION}:iam::*:role/AWSA*"
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
           ]
         }
       }
@@ -280,9 +278,7 @@
           "aws:RequestedRegion": "${HOME_REGION}"
         },
         "ArnNotLike": {
-          "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}","arn:${PARTITION}:iam::*:role/AWSA*"
-          ]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     }

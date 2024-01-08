@@ -68,8 +68,8 @@ centralNetworkServices:
         regions:
           - *HOME_REGION
         firewallPolicy:
-          statelessDefaultActions: ['aws:forward_to_sfe']
-          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statelessDefaultActions: ["aws:forward_to_sfe"]
+          statelessFragmentDefaultActions: ["aws:forward_to_sfe"]
           statefulRuleGroups:
             - name: AWSAccelerator-rule-group
             - name: AWSAccelerator-domain-list-group
@@ -96,7 +96,7 @@ centralNetworkServices:
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
-                    settings: ['100']
+                    settings: ["100"]
               - action: DROP
                 header:
                   destination: 10.4.0.0/16
@@ -107,7 +107,7 @@ centralNetworkServices:
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
-                    settings: ['200']
+                    settings: ["200"]
       - name: AWSAccelerator-domain-list-group
         regions:
           - *HOME_REGION
@@ -118,8 +118,8 @@ centralNetworkServices:
             rulesSourceList:
               generatedRulesType: DENYLIST
               # Add/Modify the domain list per business needs.
-              targets: ['.google.com']
-              targetTypes: ['TLS_SNI', 'HTTP_HOST']
+              targets: [".google.com"]
+              targetTypes: ["TLS_SNI", "HTTP_HOST"]
           ruleVariables:
             ipSets:
               name: HOME_NET
@@ -131,8 +131,8 @@ centralNetworkServices:
             portSets:
               name: HOME_NET
               definition:
-                - '80'
-                - '443'
+                - "80"
+                - "443"
   route53Resolver:
     endpoints:
       - name: EndpointOutbound
@@ -145,10 +145,10 @@ centralNetworkServices:
           - Endpoint-B
         rules:
           - name: AWSAccelerator-Endpoint-mad-example-local
-            domainName: example.local      # UPDATE
+            domainName: example.local # UPDATE
             targetIps:
               - ip: 1.1.1.1
-                # port: '5353' # only include if targeting a non-standard DNS port
+              # port: '5353' # only include if targeting a non-standard DNS port
               - ip: 2.2.2.2
             shareTargets:
               accounts:
@@ -177,7 +177,7 @@ centralNetworkServices:
 prefixLists:
   - name: onpremises-prefix-list
     deploymentTargets:
-      organizationalUnits: 
+      organizationalUnits:
         - Central
         - Dev
         - Test
@@ -677,7 +677,7 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
         outboundRules:
           - description: "All Outbound"
             types:
@@ -705,19 +705,19 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local Web Tier Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Web
+                  - Web
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - App
+                  - App
         outboundRules:
           - description: "All Outbound"
             types:
@@ -745,7 +745,7 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local App DB Traffic Inbound"
             types:
               - MSSQL
@@ -755,13 +755,13 @@ vpcs:
               - ORACLE-RDS
             sources:
               - securityGroups:
-                - App
+                  - App
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Data
+                  - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -851,13 +851,13 @@ vpcs:
               - HTTPS
               - HTTP
             sources:
-              - 0.0.0.0/0         
+              - 0.0.0.0/0
           - description: "Local Mgmt Traffic Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
         outboundRules:
           - description: "All Outbound"
             types:
@@ -866,25 +866,25 @@ vpcs:
               - 0.0.0.0/0
       - name: "App"
         description: "App Security Group for Central VPC"
-        inboundRules:         
+        inboundRules:
           - description: "Local Mgmt Traffic Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local Web Tier Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Web
+                  - Web
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - App
+                  - App
         outboundRules:
           - description: "All Outbound"
             types:
@@ -893,29 +893,29 @@ vpcs:
               - 0.0.0.0/0
       - name: "Data"
         description: "Data Security Group for Central VPC"
-        inboundRules:          
+        inboundRules:
           - description: "Local Mgmt Traffic Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local App DB Traffic Inbound"
             types:
-              - MSSQL 
+              - MSSQL
               - MYSQL/AURORA
               - REDSHIFT
               - POSTGRESQL
               - ORACLE-RDS
             sources:
               - securityGroups:
-                - App
+                  - App
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Data
+                  - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1300,7 +1300,7 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1328,19 +1328,19 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local Web Tier Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Web
+                  - Web
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - App
+                  - App
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1368,23 +1368,23 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local App DB Traffic Inbound"
             types:
-              - MSSQL 
+              - MSSQL
               - MYSQL/AURORA
               - REDSHIFT
               - POSTGRESQL
               - ORACLE-RDS
             sources:
               - securityGroups:
-                - App
+                  - App
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Data
+                  - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1613,7 +1613,7 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1641,19 +1641,19 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local Web Tier Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Web
+                  - Web
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - App
+                  - App
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1681,7 +1681,7 @@ vpcs:
               - ALL
             sources:
               - securityGroups:
-                - Management
+                  - Management
           - description: "Local App DB Traffic Inbound"
             types:
               - MSSQL
@@ -1691,13 +1691,13 @@ vpcs:
               - ORACLE-RDS
             sources:
               - securityGroups:
-                - App
+                  - App
           - description: "Allow East/West Communication Inbound"
             types:
               - ALL
             sources:
               - securityGroups:
-                - Data
+                  - Data
         outboundRules:
           - description: "All Outbound"
             types:

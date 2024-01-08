@@ -22,7 +22,7 @@ serviceControlPolicies:
     policy: service-control-policies/LZA-Guardrails-Part0-WkldOUs.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits: 
+      organizationalUnits:
         - Central
         - Dev
         - Test
@@ -35,64 +35,64 @@ serviceControlPolicies:
     policy: service-control-policies/LZA-Guardrails-Part1.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits: 
-      - Security
-      - Infrastructure
-      - Central
-      - Dev
-      - Test
-      - Prod
-      - UnClass
-      - Sandbox
-## IF using Control Tower, remove the following block and uncomment the next block
-## BEGIN
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - UnClass
+        - Sandbox
+  ## IF using Control Tower, remove the following block and uncomment the next block
+  ## BEGIN
   - name: AWSAccelerator-Guardrails-Sensitive-Part-1
     description: >
       LZA Guardrails Sensitive Environment Specific Part 1
     policy: service-control-policies/LZA-Guardrails-Sensitive.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits: 
-      - Security
-      - Infrastructure
-      - Central
-      - Dev
-      - Test
-      - Prod
-## END
-## IF using Control Tower, uncomment the following block
-#  - name: AWSAccelerator-Guardrails-Sensitive-Part-1
-#    description: >
-#      LZA Guardrails Sensitive Environment Specific Part 1
-#    policy: service-control-policies/LZA-Guardrails-Sensitive.json
-#    type: customerManaged
-#    deploymentTargets:
-#      organizationalUnits: 
-#      - Infrastructure
-#      - Central
-#      - Dev
-#      - Test
-#      - Prod
-#      accounts:
-#      - Audit
-#      - LogArchive
-## END
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+  ## END
+  ## IF using Control Tower, uncomment the following block
+  #  - name: AWSAccelerator-Guardrails-Sensitive-Part-1
+  #    description: >
+  #      LZA Guardrails Sensitive Environment Specific Part 1
+  #    policy: service-control-policies/LZA-Guardrails-Sensitive.json
+  #    type: customerManaged
+  #    deploymentTargets:
+  #      organizationalUnits:
+  #      - Infrastructure
+  #      - Central
+  #      - Dev
+  #      - Test
+  #      - Prod
+  #      accounts:
+  #      - Audit
+  #      - LogArchive
+  ## END
   - name: AWSAccelerator-Guardrails-Unclass
     description: >
       LZA Guardrails Unclassified Environment Specific
     policy: service-control-policies/LZA-Guardrails-Unclass.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits: 
-      - UnClass
+      organizationalUnits:
+        - UnClass
   - name: AWSAccelerator-Guardrails-Sandbox
     description: >
       LZA Guardrails Sandbox Environment Specific
     policy: service-control-policies/LZA-Guardrails-Sandbox.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits: 
-      - Sandbox
+      organizationalUnits:
+        - Sandbox
   - name: AWSAccelerator-Quarantine-New-Object
     description: >
       LZA Quarantine policy - Apply to ACCOUNTS that need to be quarantined
@@ -106,7 +106,7 @@ serviceControlPolicies:
     policy: service-control-policies/LZA-Guardrails-Part0-CoreOUs.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits: 
+      organizationalUnits:
         - Security
         - Infrastructure
 taggingPolicies: []

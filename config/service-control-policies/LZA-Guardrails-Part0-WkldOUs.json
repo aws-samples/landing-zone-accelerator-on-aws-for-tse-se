@@ -10,10 +10,10 @@
         "cloudtrail:StopLogging",
         "cloudtrail:UpdateTrail"
       ],
-      "Resource": ["arn:${PARTITION}:cloudtrail:*:*:trail/AWSA*"],
+      "Resource": ["arn:${PARTITION}:cloudtrail:*:*:trail/${ACCELERATOR_PREFIX}*"],
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
     },
@@ -36,7 +36,7 @@
       "Resource": ["*"],
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },
@@ -50,10 +50,10 @@
         "events:DisableRule",
         "events:DeleteRule"
       ],
-      "Resource": ["arn:${PARTITION}:events:*:*:rule/AWSA*"],
+      "Resource": ["arn:${PARTITION}:events:*:*:rule/${ACCELERATOR_PREFIX}*"],
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
     },
@@ -64,7 +64,7 @@
       "Resource": ["arn:${PARTITION}:config:*:*:config-rule/*"],
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },
@@ -81,7 +81,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         },
         "ForAnyValue:StringLike": {
           "kms:ResourceAliases": "alias/accelerator*"
@@ -92,10 +92,10 @@
       "Sid": "IAM",
       "Effect": "Deny",
       "Action": ["iam:CreatePolicy", "iam:DeletePolic*", "iam:SetDefaultPolicyVersion", "iam:CreatePolicyVersion"],
-      "Resource": "arn:${PARTITION}:iam::*:policy/AWSA*",
+      "Resource": "arn:${PARTITION}:iam::*:policy/${ACCELERATOR_PREFIX}*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
     },
@@ -115,7 +115,7 @@
           "aws:ResourceTag/Accelerator": "AWSA"
         },
         "ArnNotLike": {
-          "aws:PrincipalArn": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalArn": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
     },
@@ -180,7 +180,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
     }
