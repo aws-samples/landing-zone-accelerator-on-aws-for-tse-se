@@ -23,6 +23,8 @@ terminationProtection: true
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: false
+  customDeploymentRole: AWSAccelerator-PipelineRole # UPDATE: If using a custom AcceleratorPrefix in the installer stack, this need to be updated accordingly
+  forceBootstrap: true
 snsTopics:
   deploymentTargets:
     organizationalUnits:
@@ -50,7 +52,7 @@ logging:
     organizationTrailSettings:
       multiRegionTrail: true
       globalServiceEvents: true
-      managementEvents: true
+      managementEvents: true # UPDATE If using ControlTower, set to False. Control Tower already configures an organization trail for management events
       s3DataEvents: true
       lambdaDataEvents: false
       sendToCloudWatchLogs: true
@@ -99,10 +101,10 @@ logging:
         noncurrentVersionExpiration: 730
   elbLogBucket:
     lifecycleRules:
-        - enabled: true
-          abortIncompleteMultipartUpload: 7
-          expiration: 730
-          noncurrentVersionExpiration: 730
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
 ssmInventory:
   enable: true
   deploymentTargets:
@@ -159,25 +161,25 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
     - deploymentTargets:
         accounts:
           - Perimeter
@@ -203,31 +205,31 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
     - deploymentTargets:
         accounts:
           - Management
@@ -253,31 +255,31 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
     - deploymentTargets:
         organizationalUnits:
           - Security
@@ -310,28 +312,47 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+limits:
+  - serviceCode: vpc
+    quotaCode: L-29B6F2EB
+    desiredValue: 90
+    deploymentTargets:
+      accounts:
+        - Network
+  - serviceCode: vpc
+    quotaCode: L-F678F1CE
+    desiredValue: 15
+    deploymentTargets:
+      accounts:
+        - Network
+  - serviceCode: ec2
+    quotaCode: L-0263D0A3
+    desiredValue: 5
+    deploymentTargets:
+      accounts:
+        - Perimeter

@@ -46,7 +46,7 @@ roleSets:
             principal: ec2.amazonaws.com
         policies:
           awsManaged:
-            - AmazonSSMManagedInstanceCore 
+            - AmazonSSMManagedInstanceCore
             - CloudWatchAgentServerPolicy
             - AmazonS3ReadOnlyAccess
         boundaryPolicy: AWSAccelerator-Default-Boundary-Policy
@@ -79,7 +79,7 @@ managedActiveDirectories:
     type: AWS Managed Microsoft AD
     account: Operations
     region: *HOME_REGION
-    dnsName: example.local      # UPDATE
+    dnsName: example.local # UPDATE
     netBiosDomainName: example
     description: This directory is a) shared to most accounts in the organization to provide centralized Windows and Linux authentication for cloud workloads, b) used as an identity source for AWS SSO, c) used to inter-connect with on-premises directory services, and d) provides a single identities source for instance and AWS console access.
     edition: Enterprise
@@ -94,15 +94,15 @@ managedActiveDirectories:
       region: *HOME_REGION
       adminSecretName: my-admin-001
     sharedOrganizationalUnits:
-        organizationalUnits:
-          - Infrastructure
-          - Central
-          - Dev
-          - Test
-          - Prod
-          - UnClass
+      organizationalUnits:
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - UnClass
     logs:
-      groupName: /AWSAccelerator/MAD/example.local      # UPDATE
+      groupName: /AWSAccelerator/MAD/example.local # UPDATE
     activeDirectoryConfigurationInstance:
       instanceType: t3.large
       vpcName: Central
@@ -119,7 +119,7 @@ managedActiveDirectories:
         - scriptName: ADGroupSetup
           scriptFilePath: ad-config-scripts/AD-group-setup.ps1
         - scriptName: ADUserSetup
-          scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
+          scriptFilePath: ad-config-scripts/AD-user-setup.ps1
         - scriptName: ADUserGroupSetup
           scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
         - scriptName: ADGroupGrantPermissionsSetup

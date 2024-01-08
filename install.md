@@ -72,8 +72,8 @@ Use the following steps to deploy this solution on AWS. For detailed instruction
 
 [Step 3. Copy the configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-3.-update-the-configuration-files.html)
 - Clone the `aws-accelerator-config` AWS CodeCommit repository.
-- Clone the `landing-zone-accelerator-on-aws` repo
-- Copy the contents from the `aws-best-practice-tse-se` folder under reference/sample-configurations to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
+- Clone this repository
+- Copy the contents from the `config` folder from this repository to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
 
 Step 4. Update the configuration files and release a change.
 
@@ -96,7 +96,7 @@ Step 4. Update the configuration files and release a change.
           policy: service-control-policies/LZA-Guardrails-Sensitive.json
           type: customerManaged
           deploymentTargets:
-            organizationalUnits: 
+            organizationalUnits:
             - Infrastructure
             - Central
             - Dev
@@ -110,13 +110,4 @@ Step 4. Update the configuration files and release a change.
 
 - Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
 - Release a change manually to the `AWSAccelerator-Pipeline` pipeline.
-- After the **Accounts** stage completes, the **Network** account will be created. VPC service quotas need to be increased in the Network account before the Networking phase begins or the Pipeline will fail. This is approximately 20 minutes after the **Accounts** stage completes. (If it does, executing a **Retry** is the next action).
-- Two service limits need to be increased in the **Network** AWS Account. Follow these steps:
-  - Assume the **OrganizationAccountAccessRole** or **AWSControlTowerExecution** role into the **Network** account. (The AWS Account ID can be determined in AWS Organizations)
-  - Navigate to **Service Quotas → AWS Services**
-  - Search for **VPC** and select when found
-  - Click on Interface **VPC endpoints per VPC** (Quota Code: L-29B6F2EB) and request a quota increase to 90
-  - Click on **VPCs per Region** (Quota Code: L-F678F1CE) and request a quota increase to 8
-  - (It takes approximately 15-30 minutes for the requested quota increase to apply)
-- (optional) Retry the failed Pipeline Stage if the quota increase was not completed in time.
 - Await successful completion of `AWSAccelerator-Pipeline` pipeline.

@@ -41,6 +41,8 @@ centralSecurityServices:
     enable: true
     regionAggregation: true
     excludeRegions: []
+    snsTopicName: SecurityHigh
+    notificationLevel: HIGH
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
         enable: true
@@ -61,6 +63,9 @@ centralSecurityServices:
           - CIS.1.20
           - CIS.1.22
           - CIS.2.6
+    logging:
+      cloudWatch:
+        enable: true
   ssmAutomation:
     documentSets:
       - shareTargets:
@@ -92,7 +97,7 @@ accessAnalyzer:
   enable: true
 iamPasswordPolicy:
   allowUsersToChangePassword: true
-  hardExpiry: false
+  hardExpiry: true
   requireUppercaseCharacters: true
   requireLowercaseCharacters: true
   requireSymbols: true
@@ -103,9 +108,15 @@ iamPasswordPolicy:
 awsConfig:
   enableConfigurationRecorder: true
   enableDeliveryChannel: true
+  ## If using Control Tower, remove the following block as Control Tower already creates a config aggregator
+  ## BEGIN
+  aggregation:
+    enable: true
+    delegatedAdminAccount: Audit
+  ## END
   ruleSets:
     - deploymentTargets:
-      ## GLOBAL Section for config rules across all OUs + Management Account
+        ## GLOBAL Section for config rules across all OUs + Management Account
         organizationalUnits:
           - Security
           - Infrastructure
@@ -136,7 +147,7 @@ awsConfig:
                 value: ${ACCEL_LOOKUP::KMS}
                 type: StringList
     - deploymentTargets:
-      ##  Section for config rules across all OUs except Sandbox + Management Account
+        ##  Section for config rules across all OUs except Sandbox + Management Account
         organizationalUnits:
           - Security
           - Infrastructure
