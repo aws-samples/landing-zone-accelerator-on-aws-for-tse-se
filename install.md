@@ -1,113 +1,115 @@
 # Trusted Secure Enclaves Sensitive Edition (TSE-SE)
 
-## Deployment Considerations
+There are five parts to this guide:
 
-The Landing Zone Accelerator on AWS builds on top of an existing AWS Control Tower or AWS Organizations multi-account structure. The following mandatory accounts need to be created before launching the Landing Zone Accelerator stack.
+1. Prerequisites - This includes gathering information, external dependencies for the initial deployment and the initial AWS Organizations management account setup.
+2. LZA Deployment
+3. TSE-SE reference architecture deployment and customization
+4. Post deployment steps
 
-**Management account** – This account is designated when first creating an AWS Organization. It is a privileged account where all AWS Organizations global configuration management and billing consolidation occurs.
+# 1. Prerequisites
 
-**LogArchive account** – This account is used for centralized logging of AWS service logs.
+This reference architecture uses Landing Zone Accelerator on AWS (LZA) as its deployment engine. We therefore assume foundational knowledge of [Landing Zone Accelerator on AWS (LZA)](https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/). If you are not familiar with LZA we recommend you work through the [LZA immersion day](https://catalog.workshops.aws/landing-zone-accelerator/en-US) prior to deploying the reference architecture.
 
-**SecurityTooling account** – This account is used to centralize all security operations and management activities. This account is typically used as a delegated administrator of centralized security services such as Amazon Macie, Amazon GuardDuty, and AWS Security Hub. NOTE: The LZA configuration files refer to this as the Audit account, but it serves the function of the Security Tooling account.
+To support the LZA and reference architecture deployments, you will need to identify the following parameters and resources.
 
-### AWS Organizations (without Control Tower)
-The three mandatory accounts must be created manually in AWS Organizations with the default **OrganizationAccountAccessRole** cross-account role before beginning.
+## 1.1 Identify your home AWS Region
 
-### AWS Control Tower
-_Note: Government of Canada customers are required to skip this step and deploy using AWS Organizations and NOT Control Tower_
+The home AWS Region will be the Region in which you will most often operate in.
 
-You should first configure AWS Control Tower in your home region using the documentation from [Getting started with AWS Control Tower](https://docs.aws.amazon.com/controltower/latest/userguide/getting-started-with-control-tower.html)
-- When deploying Control Tower, leave the Region deny setting set to Not enabled - the Accelerator needs a customized region deny policy.
-- Select all regions for **Additional AWS Regions for governance**
+## 1.2 Email addresses
+You will need to provision the following 7 unique email addresses for the accounts that the reference architecture will create.
 
-After Control Tower deployment you should have a **Security** and **Sandbox** OU as well as the three mandatory accounts.
+| Account | Purpose | Example email |
+|---|---|---|
+| Management Account | This account is designated when first creating an AWS Organizations organization. It is a privileged account where all AWS Organizations global configuration management and billing consolidation occurs. The account will be used to create the other two mandatory accounts required by LZA. |  lz-dev+management@example.com |
+| Security Account | This account is used to centralize all security operations and management activities. This account is typically used as a delegated administrator of centralized security services such as Amazon Macie, Amazon GuardDuty, and AWS Security Hub. NOTE: The LZA configuration files refer to this as the Audit account, but it serves the function of the Security Tooling account. | lz-dev+security@example.com |
+| Log Archive Account | This account is used for centralized logging of AWS service logs. | lz-dev+log-archive@example.com |
+| Network Account | This account is used for centralized networking that allows network administrators to govern shared networks and internally shared network services for the organization. For example, access to on-premises services via a VPN. | lz-dev+network@example.com |
+| Operations Account | This account is used for centralized IT Operational resources (Active Directory, traditional syslog tooling, ITSM, etc.). | lz-dev+operations@example.com |
+| Perimeter Account | This account is used to centralize access to external networks, e.g. third-party SaaS or internet connectivity. | lz-dev+perimeter@example.com |
+| Sandbox/Workload Accounts | These accounts are where the workloads are deployed. As a minimum we recommend creating a development workload account to test the reference architecture deployment.  | lz-dev+workload-dev-1@example.com | lz-dev+workload-dev-1@example.com |
 
-### Administrative role
+Additionally, you will need to allocate the following 5 email addresses used for operational notification purposes.
 
-Landing Zone Accelerator on AWS utilizes an IAM role with administrative privileges to manage the orchestration of resources across the environment. This configuration, by default, leverages the default cross-account role that is utilized by AWS Organizations (**OrganizationAccountAccessRole**) or AWS Control Tower (**AWSControlTowerExecution**).
+| Name | Purpose | Example email |
+|---|---|---|
+| High security events | Events marked as CRITICAL or HIGH will be sent to this email address. |  lz-dev+security-alerts-high@example.com |
+| Medium security events | Events marked as MEDIUM will be sent to this email address. |  lz-dev+security-alerts-medium@example.com |
+| Low security events | Events marked as LOW will be sent to this email address. |  lz-dev+security-alerts-low@example.com |
+| AWS budgets alerts | Any alerts related to the spending limits applied to the accounts will be sent to this email address. |  lz-dev+budget-alerts@example.com |
+| LZ operators | Any events related to the operation of the landing zone will be sent to this email, for example change approval for landing zone updates. |  lz-dev+operators@example.com |
 
-## Customizing the solution
+## 1.3 Active directory domain details
 
-The Landing Zone Accelerator on AWS deploys an AWS CodeCommit repository along with six customizable YAML configuration files. The YAML files are pre-populated with a minimal configuration for the solution. The configuration files found in this directory should replace the files in the default AWS CodeCommit repository after adjusting environment specific configurations.
+| Name | Purpose | Example |
+|---|---|---|
+| Active Directory Domain | Root domain suffix for the managed active directory controller | example.com |
+| adconnector-user email | [Domain user to be created to allow AD Connector setup](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/directory_ad_connector.html) for centralized IAM authentication | example-adconnector-user@example.com |
+| AD Admin User | AWS Managed Active Directory User for Admin tasks | example-user1@example.com |
+| AD ReadOnly User | AWS Managed Active Directory User for read only tasks | example-user2@example.com |
 
-- accounts-config.yaml - Replace all the AWS Account Email addresses with valid emails for the deployment. These are used to create AWS Accounts.
-- global-config.yaml - Replace all emails used for AWS Budget notifications.
-- security-config.yaml - Replace all emails used for the SNS notifications.
-- This sample configuration is built using the **ca-central-1** AWS region as the home or installation region. If installing to a different home region, the five references to **ca-central-1** must be updated to reference your desired home region in the following four configuration files (global-config, iam-config, network-config, security-config).
+## 1.4 GitHub account
+If you are using the GitHub source for the LZA code, you will need a GitHub account to generate a GitHub API key in a later step.
 
-### Prerequisites - AWS Organizations (without Control Tower)
+## 1.5 Reference architecture management account setup
+You will need to create a new AWS Account for the reference architecture deployment. You can follow the [AWS guidance on setting up a new AWS account](https://aws.amazon.com/free/).
 
-1. [Enable AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html) in _all features_ mode
-2. Ensure the three mandatory accounts, as described above, are configured using AWS Organizations. See [Creating an AWS account in your organization](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html).
-3. Create the **Infrastructure** Organization Unit. The default configuration for Landing Zone Accelerator on AWS assumes that an OU named **Infrastructure** has been created. This OU is intended to be used for core infrastructure workload accounts that you can add to your organization, such as central networking or operations accounts.
-4. If you are using the github source for the LZA code, you will need to follow the prerequisite step to [store a github token in secrets manager](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites.html#create-a-github-personal-access-token-and-store-in-secrets-manager)
+### 1.5.1 Run EC2 instance in the management account
+To run the installation in new accounts you need to pre-warm the account so that AWS automatically sets the correct quotas. To do this, launch small EC2 instance t3.medium for 15 minutes. Then terminate the instance and delete its security group.
 
-In file `global-config.yaml`:
-- Make sure `managementAccountAccessRole` is set to **OrganizationAccountAccessRole**
-- Make sure `controlTower` is set to `enable: false`
+### 1.5.2 Set security, operations, and billing contact information
 
-### Prerequisites - AWS Control Tower
+Follow the guidance on [configuring account level contacts](https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/acct-01.html) to set the security and billing information. You can either use the email addresses you allocated above for "High security events", "LZ operators" and "AWS budgets alerts" or define additional contacts.
 
-1. Create the **Infrastructure** Organizational Unit from the **Control Tower** console. The default configuration for Landing Zone Accelerator on AWS assumes that an OU named **Infrastructure** has been created. This OU is intended to be used for core infrastructure workload accounts that you can add to your organization, such as central networking or operations accounts.
-2. Using Control Tower, create the additional Organizational Units that are referenced from your configuration file. The default configuration for Landing Zone Accelerator on AWS assumes that the following OUs are created and registered in AWS Control Tower: **Central**, **Dev**, **Test**, **Prod**, **UnClass** and **Sandbox**.
-3. Go to Control Tower Account Factory and edit the Network configuration
-    - Set the Maximum number of private subnets to 0
-    - Uncheck all regions for VPC creations (VPC creation will be handled by the accelerator)
+### 1.5.3 Verify email of the root user
+After creating the account e-mail is sent to the root user with the request to verify the e-mail address. Confirm by clicking the link in the email.
 
+### 1.5.4 Enable MFA on the root user
 
-## Deployment overview
+We recommend that you use a hardware multi-factor authentication (MFA) device. Follow the guidance on [restricting the use of the root user](https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/acct-02.html) to configure MFA on the root user.
 
-Use the following steps to deploy this solution on AWS. For detailed instructions, follow the links for each step.
+### 1.5.5 Create a local IAM deployment user account
 
-[Step 1. Launch the stack](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html)
+- [Configure console access for each user](https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/acct-03.html) - you only need to follow the steps to create a local IAM user
+- [Require MFA to login](https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/acct-05.html) - **note:** You only need to configure the IAM user you created when restricting root user access, with MFA (In the post deployment steps you will configure your IdP where you can govern MFA access)
 
-- Launch the LZA AWS CloudFormation template into your AWS account. (Ensure the region is set to your desired home region, as it typically defaults to US East (N. Virginia);
-- If deploying without Control Tower, ensure that the Environment Configuration for Control Tower Environment is set to **No**, otherwise set it to **Yes**
+### 1.5.6 [optional] Increase the quota for AWS accounts
 
-- Review the template’s parameters and enter or adjust the default values as needed.
+If your deployment will have more than 10 AWS, access the [service quota console for AWS Organizations](https://console.aws.amazon.com/servicequotas/home?region=us-east-1#!/services/organizations/quotas), to request an increase to the default maximum number of accounts.
 
-[Step 2. Await initial environment deployment](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-2.-await-initial-environment-deployment.html)
+### 1.5.7 Verify the quota for Lambda functions
 
-- Await successful completion of `AWSAccelerator-Pipeline` pipeline.
+In the Service quota console look for Service = Lambda and verify that quota on Concurrent executions = 1000. If it is smaller or 'not available' make sure you executed steps from point 1.5.1. If it did not help use the button 'Request increase at account-level' to request 1000. If it is not increased after 24 hours please contact [Support Center](https://console.aws.amazon.com/support/home).
 
-[Step 3. Copy the configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-3.-update-the-configuration-files.html)
-- Clone the `aws-accelerator-config` AWS CodeCommit repository.
-- Clone this repository
-- Copy the contents from the `config` folder from this repository to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
+### 1.5.8 Update AWS CodeBuild concurrency quota
 
-Step 4. Update the configuration files and release a change.
+Follow the prerequisite step to [update AWS CodeBuild concurrency quota](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites#update-codebuild-conncurrency-quota).
 
-- Using the IDE of your choice, in your local `aws-accelerator-config` repo, update the variables at the top of each config, such as `homeRegion`, to match where you deployed the solution to.
-- Update the configuration files to match the desired state of your environment. Look for the UPDATE comments for areas requiring updates, such as e-mail addresses in your accounts-config.yaml
-- Review the contents in the Security Controls section below to understand if any changes need to be made to meet organizational requirements, such as applying SCPs to the various OUs.
-- If using Control Tower, review these specific settings:
+### 1.5.9 Ensure your home AWS Region is accessible
 
-    In file `global-config.yaml`:
-    - Update `managementAccountAccessRole` value to **AWSControlTowerExecution**
-    - Make sure `controlTower` is set to `enable: true`
+Follow the prerequisite step to [ensure your global region is accessible](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites#ensure-your-global-region-is-accessible).
 
-    In file `organization-config.yaml`:
-    - Uncomment the proper configuration block under the `AWSAccelerator-Guardrails-Sensitive-Part-1` configuration to have the following configuration
+### 1.5.10 Enable AWS Cost Explorer
 
-      ```
-        - name: AWSAccelerator-Guardrails-Sensitive-Part-1
-          description: >
-            LZA Guardrails Sensitive Environment Specific Part 1
-          policy: service-control-policies/LZA-Guardrails-Sensitive.json
-          type: customerManaged
-          deploymentTargets:
-            organizationalUnits:
-            - Infrastructure
-            - Central
-            - Dev
-            - Test
-            - Prod
-            accounts:
-            - Audit
-            - LogArchive
-      ```
+Following the guidance on [enabling AWS Cost Explorer](https://docs.aws.amazon.com/cost-management/latest/userguide/ce-enable.html).
 
+### 1.5.11 Configure your GitHub token secret
 
-- Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
-- Release a change manually to the `AWSAccelerator-Pipeline` pipeline.
-- Await successful completion of `AWSAccelerator-Pipeline` pipeline.
+If you are using the GitHub source for the LZA code, you will need to follow the prerequisite step to [store a github token in secrets manager](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites.html#create-a-github-personal-access-token-and-store-in-secrets-manager)
+
+### 1.5.12 Enable IAM Identity Center in the management account
+
+1. Login into the management account
+2. Make sure the region in the console is set to your home AWS Region
+3. Follow the guidance on [enabling AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/get-set-up-for-idc.html)
+
+# 2. Deploy LZA
+
+We recommend you first read the [LZA guidance on troubleshooting and known issues](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html) prior to running the installation.
+
+Before deploying the Landing Zone Accelerator on AWS, you need to choose a method to centralize the management of resources provisioned by this solution. You can use either AWS Control Tower or AWS Organizations for the management capabilities.
+
+Use the following steps to deploy the LZA solution.
+- [Install LZA using AWS Organizations](install-organizations.md)
+- [Install LZA using AWS Control Tower](install-controltower.md)

@@ -23,3 +23,4 @@ Customers are encouraged to work with their local AWS Account Teams to learn mor
 
 -  [Configuration files and installation instructions](./install.md)
 -  [Instructions for version updates](./update-instructions.md)
+-  [FAQ](./documentation/FAQ.md)

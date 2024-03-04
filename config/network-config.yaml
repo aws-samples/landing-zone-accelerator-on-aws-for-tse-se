@@ -24,6 +24,12 @@ transitGateways:
             attachment:
               vpcName: Perimeter
               account: Perimeter
+          - destinationCidrBlock: {{ VpcDevCidr }}
+            blackhole: true
+          - destinationCidrBlock: {{ VpcTestCidr }}
+            blackhole: true
+          - destinationCidrBlock: {{ VpcProdCidr }}
+            blackhole: true
       - name: Network-Main-Shared
         routes:
           - destinationCidrBlock: 0.0.0.0/0
@@ -88,22 +94,22 @@ centralNetworkServices:
               # Block traffic from Dev/Test VPCs to Prod VPC
               - action: DROP
                 header:
-                  destination: 10.4.0.0/16
+                  destination: {{ VpcProdCidr }}
                   destinationPort: ANY
                   direction: ANY
                   protocol: IP
-                  source: 10.2.0.0/16
+                  source: {{ VpcDevCidr }}
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
                     settings: ["100"]
               - action: DROP
                 header:
-                  destination: 10.4.0.0/16
+                  destination: {{ VpcProdCidr }}
                   destinationPort: ANY
                   direction: ANY
                   protocol: IP
-                  source: 10.3.0.0/16
+                  source: {{ VpcTestCidr }}
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
@@ -124,10 +130,10 @@ centralNetworkServices:
             ipSets:
               name: HOME_NET
               definition:
-                - 10.1.0.0/16
-                - 10.2.0.0/16
-                - 10.3.0.0/16
-                - 10.4.0.0/16
+                - {{ VpcCentralCidr }}
+                - {{ VpcDevCidr }}
+                - {{ VpcTestCidr }}
+                - {{ VpcProdCidr }}
             portSets:
               name: HOME_NET
               definition:
@@ -139,13 +145,13 @@ centralNetworkServices:
         type: OUTBOUND
         vpc: Endpoint
         allowedCidrs:
-          - 10.0.0.0/8
+          - {{ AwsRangeCidr }}
         subnets:
           - Endpoint-A
           - Endpoint-B
         rules:
           - name: AWSAccelerator-Endpoint-mad-example-local
-            domainName: example.local # UPDATE
+            domainName: {{ MadDnsName }}
             targetIps:
               - ip: 1.1.1.1
               # port: '5353' # only include if targeting a non-standard DNS port
@@ -200,7 +206,7 @@ vpcs:
     account: Network
     region: *HOME_REGION
     cidrs:
-      - 10.7.0.0/22
+      - {{ VpcEndpointCidr }}
     defaultSecurityGroupRulesDeletion: true
     internetGateway: false
     enableDnsHostnames: true
@@ -333,7 +339,7 @@ vpcs:
     account: Perimeter
     region: *HOME_REGION
     cidrs:
-      - 10.7.4.0/22
+      - {{ VpcPerimeterCidr }}
     defaultSecurityGroupRulesDeletion: true
     internetGateway: true
     routeTables:
@@ -378,7 +384,7 @@ vpcs:
             type: natGateway
             target: Nat-Perimeter-A
           - name: TgwRoute
-            destination: 10.0.0.0/8
+            destination: {{ AwsRangeCidr }}
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -394,7 +400,7 @@ vpcs:
             type: natGateway
             target: Nat-Perimeter-B
           - name: TgwRoute
-            destination: 10.0.0.0/8
+            destination: {{ AwsRangeCidr }}
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -406,7 +412,7 @@ vpcs:
       - name: Perimeter-Nat-A
         routes:
           - name: NfwNatRoute
-            destination: 10.0.0.0/8
+            destination: {{ AwsRangeCidr }}
             type: networkFirewall
             target: AWSAccelerator-firewall
             targetAvailabilityZone: a
@@ -417,7 +423,7 @@ vpcs:
       - name: Perimeter-Nat-B
         routes:
           - name: NfwNatRoute
-            destination: 10.0.0.0/8
+            destination: {{ AwsRangeCidr }}
             type: networkFirewall
             target: AWSAccelerator-firewall
             targetAvailabilityZone: b
@@ -481,7 +487,7 @@ vpcs:
     account: Network
     region: *HOME_REGION
     cidrs:
-      - 10.2.0.0/16
+      - {{ VpcDevCidr }}
     defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Dev
@@ -639,7 +645,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -667,7 +673,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -695,7 +701,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -735,7 +741,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -796,7 +802,7 @@ vpcs:
     account: Network
     region: *HOME_REGION
     cidrs:
-      - 10.1.0.0/16
+      - {{ VpcCentralCidr }}
     defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Central
@@ -832,7 +838,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1106,7 +1112,7 @@ vpcs:
     account: Network
     region: *HOME_REGION
     cidrs:
-      - 10.3.0.0/16
+      - {{ VpcTestCidr }}
     defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Test
@@ -1262,7 +1268,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1290,7 +1296,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1318,7 +1324,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1358,7 +1364,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1419,7 +1425,7 @@ vpcs:
     account: Network
     region: *HOME_REGION
     cidrs:
-      - 10.4.0.0/16
+      - {{ VpcProdCidr }}
     defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Prod
@@ -1575,7 +1581,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1603,7 +1609,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1631,7 +1637,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A
@@ -1671,7 +1677,7 @@ vpcs:
                 vpc: Central
                 subnets:
                   - Central-Web-A
-                  - Central-Web-A
+                  - Central-Web-B
                   - Central-App-A
                   - Central-App-B
                   - Central-Mgmt-A

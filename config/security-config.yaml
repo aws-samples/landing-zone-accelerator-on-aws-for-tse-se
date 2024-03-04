@@ -93,6 +93,9 @@ centralSecurityServices:
           # Attaches Aws IAM Managed Policy to IAM Role
           - name: AWSAccelerator-Attach-IAM-Role-Policy
             template: ssm-documents/attach-iam-role-policy.yaml
+          # Enforces HTTPS on S3 Buckets
+          - name: AWSAccelerator-S3-Enforce-HTTPS
+            template: ssm-documents/s3-enforce-https.yaml
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:
@@ -146,6 +149,20 @@ awsConfig:
               - name: KMSMasterKey
                 value: ${ACCEL_LOOKUP::KMS}
                 type: StringList
+        - name: AWSAccelerator-s3-bucket-enforce-https
+          identifier: S3_BUCKET_SSL_REQUESTS_ONLY
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          remediation:
+            rolePolicyFile: custom-config-rules/bucket-enforce-https-remediation-role.json
+            automatic: true
+            targetId: AWSAccelerator-S3-Enforce-HTTPS
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: BucketName
+                value: RESOURCE_ID
+                type: String
     - deploymentTargets:
         ##  Section for config rules across all OUs except Sandbox + Management Account
         organizationalUnits:
@@ -378,147 +395,147 @@ cloudWatch:
       metrics:
         # CIS 1.1 – Avoid the use of the "root" account
         - filterName: AWSAccelerator-RootAccountMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: CloudTrailMetrics
           metricName: RootAccount
           metricValue: "1"
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
         - filterName: AWSAccelerator-UnauthorizedAPICallsMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'
           metricNamespace: CloudTrailMetrics
           metricName: UnauthorizedAPICalls
           metricValue: "1"
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - filterName: AWSAccelerator-ConsoleSigninWithoutMFAMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && ($.userIdentity.type = "IAMUser") && ($.responseElements.ConsoleLogin = "Success")}'
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleSigninWithoutMFA
           metricValue: "1"
         # CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         # - filterName: AWSAccelerator-MetricFilter
-        #   logGroupName: aws-accelerator-cloudtrail-logs
+        #   logGroupName: {{ CloudTrailLogGroup }}
         #   filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
         #   metricNamespace: CloudTrailMetrics
         #   metricName: RootAccountUsage
         #   metricValue: "1"
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - filterName: AWSAccelerator-IAMPolicyChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}"
           metricNamespace: CloudTrailMetrics
           metricName: IAMPolicyChanges
           metricValue: "1"
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - filterName: AWSAccelerator-CloudTrailChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}"
           metricNamespace: CloudTrailMetrics
           metricName: CloudTrailChanges
           metricValue: "1"
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - filterName: AWSAccelerator-ConsoleAuthenticationFailureMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}'
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleAuthenticationFailure
           metricValue: "1"
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - filterName: AWSAccelerator-DisableOrDeleteCMKMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}"
           metricNamespace: CloudTrailMetrics
           metricName: DisableOrDeleteCMK
           metricValue: "1"
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
         - filterName: AWSAccelerator-S3BucketPolicyChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}"
           metricNamespace: CloudTrailMetrics
           metricName: S3BucketPolicyChanges
           metricValue: "1"
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - filterName: AWSAccelerator-AWSConfigChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}"
           metricNamespace: CloudTrailMetrics
           metricName: AWSConfigChanges
           metricValue: "1"
         # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
         - filterName: AWSAccelerator-SecurityGroupChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}"
           metricNamespace: CloudTrailMetrics
           metricName: SecurityGroupChanges
           metricValue: "1"
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - filterName: AWSAccelerator-NetworkACLChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}"
           metricNamespace: CloudTrailMetrics
           metricName: NetworkACLChanges
           metricValue: "1"
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - filterName: AWSAccelerator-NetworkGatewayChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}"
           metricNamespace: CloudTrailMetrics
           metricName: NetworkGatewayChanges
           metricValue: "1"
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
         - filterName: AWSAccelerator-RouteTableChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}"
           metricNamespace: CloudTrailMetrics
           metricName: RouteTableChanges
           metricValue: "1"
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
         - filterName: AWSAccelerator-VPCChangesMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}"
           metricNamespace: CloudTrailMetrics
           metricName: VPCChanges
           metricValue: "1"
         - filterName: AWSAccelerator-Ec2InstanceChangeMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventName = RunInstances) || ($.eventName = RebootInstances)|| ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName= TerminateInstances) }"
           metricNamespace: CloudTrailMetrics
           metricName: EC2InstanceEventCount
           metricValue: "1"
         - filterName: AWSAccelerator-Ec2LargeInstanceChangeMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ (($.eventName = RunInstances) || ($.eventName = RebootInstances)|| ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName= TerminateInstances)) && (($.requestParameters.instanceType= *.32xlarge) || ($.requestParameters.instanceType= *.24xlarge) || ($.requestParameters.instanceType= *.18xlarge) || ($.requestParameters.instanceType= *.16xlarge) || ($.requestParameters.instanceType= *.12xlarge) || ($.requestParameters.instanceType= *.10xlarge) || ($.requestParameters.instanceType= *.9xlarge) || ($.requestParameters.instanceType= *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }"
           metricNamespace: CloudTrailMetrics
           metricName: EC2LargeInstanceEventCount
           metricValue: "1"
         - filterName: AWSAccelerator-SSOAuthUnapprovedIPMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventSource=sso.amazonaws.com) && ($.eventName=Authenticate) && ($.sourceIPAddress != 10.10.10.*) }" # Needs Updating
           metricNamespace: CloudTrailMetrics
           metricName: SSOAuthUnapprovedIPCount
           metricValue: "1"
         - filterName: AWSAccelerator-IAMAuthUnapprovedIPMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventName=ConsoleLogin) && ($.userIdentity.type=IAMUser) && ($.sourceIPAddress != 10.10.10.*) }" # Needs Updating
           metricNamespace: CloudTrailMetrics
           metricName: IAMAuthUnapprovedIPCount
           metricValue: "1"
         - filterName: AWSAccelerator-UnencryptedFilesystemCreatedMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventName = CreateFileSystem) && ($.responseElements.encrypted IS FALSE) }"
           metricNamespace: CloudTrailMetrics
           metricName: UnencryptedFilesystemCreatedCount
           metricValue: "1"
         - filterName: AWSAccelerator-IgnoreAuthorizationFailureMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.errorCode=\"*UnauthorizedOperation\") || ($.errorCode=\"AccessDenied*\")}"
           metricNamespace: CloudTrailMetrics
           metricName: IgnoreAuthorizationFailureCount
           metricValue: "1"
         - filterName: AWSAccelerator-IgnoreConsoleSignInWithoutMfaMetric
-          logGroupName: aws-accelerator-cloudtrail-logs
+          logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=\"ConsoleLogin\") && ($.additionalEventData.MFAUsed !=\"Yes\")}"
           metricNamespace: CloudTrailMetrics
           metricName: IgnoreConsoleSignInWithoutMfaCount

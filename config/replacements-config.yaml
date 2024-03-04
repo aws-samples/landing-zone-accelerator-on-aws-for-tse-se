@@ -1,0 +1,44 @@
+######
+## This file contains global replacements variable that can re-used accross the configuration files
+## Every value should be reviewed and properly customized as part of your initial installation
+## Refer to the documentation for available options:
+## https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html#parameter-store-reference-variable
+## https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/latest/classes/_aws_accelerator_config.ParameterReplacementConfigV2.html
+######
+globalReplacements:
+# Name of CloudWatch log group that centralizes CloudTrail logs. Referenced by CloudWatch metrics and alarms
+  - key: CloudTrailLogGroup
+    type: String
+    value: aws-accelerator-cloudtrail-logs # UPDATE If using ControlTower change this to 'aws-controltower/CloudTrailLogs'
+# Domain name for Managed Active Directory
+  - key: MadDnsName
+    type: String
+    value: example.local
+  - key: MadNetbiosDomainName
+    type: String
+    value: example
+######
+# VPC CIDR definition. If you change these values you also need to update individual subnets range in network-config.yaml
+  - key: VpcCentralCidr
+    type: String
+    value: 10.1.0.0/16
+  - key: VpcDevCidr
+    type: String
+    value: 10.2.0.0/16
+  - key: VpcTestCidr
+    type: String
+    value: 10.3.0.0/16
+  - key: VpcProdCidr
+    type: String
+    value: 10.4.0.0/16
+  - key: VpcEndpointCidr
+    type: String
+    value: 10.7.0.0/22
+  - key: VpcPerimeterCidr
+    type: String
+    value: 10.7.4.0/22
+  # CIDR Range that defines the full range of AWS VPCs, referenced in route tables
+  - key: AwsRangeCidr
+    type: String
+    value: 10.0.0.0/8
+#####

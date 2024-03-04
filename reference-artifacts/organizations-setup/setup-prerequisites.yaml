@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploys the prerequisites required to deploy TSE-SE
+
+Parameters:
+  SecurityAccountEmail:
+    Type: String
+    AllowedPattern: '[^\s@]+@[^\s@]+\.[^\s@]+'
+  LogArchiveAccountEmail:
+    Type: String
+    AllowedPattern: '[^\s@]+@[^\s@]+\.[^\s@]+'
+  LandingZoneDeploymentAccountEmail:
+    Type: String
+    AllowedPattern: '[^\s@]+@[^\s@]+\.[^\s@]+'
+
+Resources:
+
+  AWSOrganization:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::Organization'
+    Properties:
+      FeatureSet: ALL
+
+  SecurityOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Security
+      ParentId: !GetAtt AWSOrganization.RootId
+
+  InfrastructureOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Infrastructure
+      ParentId: !GetAtt AWSOrganization.RootId
+
+  # LandingZoneDeploymentOU:
+  #   DeletionPolicy: Retain
+  #   Type: 'AWS::Organizations::OrganizationalUnit'
+  #   Properties:
+  #     Name: LandingZoneDeployment
+  #     ParentId: !Ref AWSOrganization
+
+  SecurityAccount:
+    DeletionPolicy: Retain
+    Type: AWS::Organizations::Account
+    Properties:
+      AccountName: Audit
+      Email: !Ref SecurityAccountEmail
+      ParentIds: 
+        - !Ref SecurityOU
+      RoleName: OrganizationAccountAccessRole
+
+  LogArchiveAccount:
+    DeletionPolicy: Retain
+    Type: AWS::Organizations::Account
+    Properties:
+      AccountName: LogArchive
+      Email: !Ref LogArchiveAccountEmail
+      ParentIds: 
+        - !Ref SecurityOU
+      RoleName: OrganizationAccountAccessRole
+
+  # LandingZoneDeploymentAccount:
+  #   DeletionPolicy: Retain
+  #   Type: AWS::Organizations::Account
+  #   Properties:
+  #     AccountName: LandingZoneDeployment
+  #     Email: !Ref LandingZoneDeploymentAccountEmail
+  #     ParentIds: 
+  #       - !Ref LandingZoneDeploymentOU
+  #     RoleName: OrganizationAccountAccessRole
+
+Outputs:
+  OrgId:
+    Description: Organisation ID
+    Value: !Ref AWSOrganization
+    Export: 
+      Name: OrgId
+  OrgRootId:
+    Description: Organisation ID
+    Value: !GetAtt AWSOrganization.RootId
+    Export: 
+      Name: OrgRootId

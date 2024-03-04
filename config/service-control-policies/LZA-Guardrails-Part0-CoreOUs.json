@@ -112,7 +112,7 @@
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/Accelerator": "AWSA"
+          "aws:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
         },
         "ArnNotLike": {
           "aws:PrincipalArn": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]

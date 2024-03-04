@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploys the additional organisational units required by TSE
+
+Resources:
+
+  CentralOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Central
+      ParentId: !ImportValue 'OrgRootId'
+
+  DevOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Dev
+      ParentId: !ImportValue 'OrgRootId'
+
+  TestOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Test
+      ParentId: !ImportValue 'OrgRootId'
+
+  ProdOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Prod
+      ParentId: !ImportValue 'OrgRootId'
+
+  UnClassOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: UnClass
+      ParentId: !ImportValue 'OrgRootId'
+
+  SandboxOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: Sandbox
+      ParentId: !ImportValue 'OrgRootId'

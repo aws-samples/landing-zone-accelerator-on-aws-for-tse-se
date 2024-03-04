@@ -224,6 +224,7 @@
         "ce:*",
         "chime:*",
         "cloudfront:*",
+        "cloudwatch:GetMetricData",
         "config:*",
         "cur:*",
         "directconnect:*",

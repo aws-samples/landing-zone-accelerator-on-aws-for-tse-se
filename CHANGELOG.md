@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1-a] - 2024-03-04
+### Added
+- feat(replacements): Added use of replacements-config.yaml file to centralize global variables.
+- fix(iam-config): Modified IAM Identity Center configuration to delegate to the Operations account. In the previous version of the configuration file, Identity Center delegated administrator was not explicitly delegated to any account. Therefore LZA used the Audit (Security) account as the delegated administrator by default. We recommend to delegate Identity Center administration to the operations account. Refer to the [Identity Center section of the FAQ](./documentation/FAQ.md#IAM-Identity-Center) for more details
+- feat(security-config): Added AWS Config rule to enforce HTTPS on S3 bucket via the bucket policy
+- fix(network-config): Added blackhole routes to Transit Gateway Network-Main-Segregated route table to match the documented reference architecture
+- feat(global-config): Added config version, to help customers easily find their current config version. This helps customers know which changelogs should be reviewed to understand the changes made between versions
+
+### Changed
+- fix(scp): Modified ACM SCP to use accelerator prefix variable
+- fix(scp): Modified GLB1 SCP to allow CloudWatch metrics for WAF in global region
+- fix(security-config): Added variable and instructions to update CloudWatch log group name for CloudTrail logs. Fixes CloudWatch alarms if using Control Tower
+- fix(network-config): Updated source rules to include Central-Web-B as an allowed source
+
 ## [1.6.0-a] - 2024-01-10
 ### Added
 - feat(global-config)!: Use the [cdkOptions/customDeploymentRole](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.cdkOptionsConfig.html#customDeploymentRole) for all CDK deployment tasks. **When implementing this change on existing deployments it is important to review and implement the related SCP changes to use the `${ACCELERATOR_PREFIX}` replacements in statement conditions.**
