@@ -98,12 +98,6 @@ Following the guidance on [enabling AWS Cost Explorer](https://docs.aws.amazon.c
 
 If you are using the GitHub source for the LZA code, you will need to follow the prerequisite step to [store a github token in secrets manager](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites.html#create-a-github-personal-access-token-and-store-in-secrets-manager)
 
-### 1.5.12 Enable IAM Identity Center in the management account
-
-1. Login into the management account
-2. Make sure the region in the console is set to your home AWS Region
-3. Follow the guidance on [enabling AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/get-set-up-for-idc.html)
-
 # 2. Deploy LZA
 
 We recommend you first read the [LZA guidance on troubleshooting and known issues](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html) prior to running the installation.

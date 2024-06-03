@@ -1,0 +1,6 @@
+Run the following:
+
+Example1:
+openssl req -newkey rsa:2048 -nodes -keyout example1-cert.key -out example1-cert.csr -subj "/C=CA/ST=Ontario/L=Ottawa/O=AnyCompany/CN=*.example.ca"
+openssl x509 -signkey example1-cert.key -in example1-cert.csr -req -days 1095 -out example1-cert.crt
+

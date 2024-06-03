@@ -915,4 +915,4 @@ These services must still be appropriately configured. This includes ensuring bo
 
 ---
 
-**Continue to [LZA configuration files and installation instructions](../config/readme.md)**
+**Continue to [LZA installation instructions](../install.md)**

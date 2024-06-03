@@ -97,7 +97,7 @@ mainSteps:
             s3_client = boto3.client("s3")
             bucket_name = event["BucketName"]
             region = os.environ['AWS_REGION']
-            
+
             bucket_policy = get_bucket_policy(s3_client, bucket_name)
             policy_sid = generate_random_policy_statement_id()
             partition = get_partition(region)

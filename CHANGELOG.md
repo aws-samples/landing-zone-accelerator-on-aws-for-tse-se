@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0-a] - 2024-06-03
+### Added
+- feat(network-config): Add deployments of Application Load Balancers in perimeter VPC. Added sample to deploy ALB in workload accounts and ALB Forwarding feature.
+- feat(replacements): Added use of replacements-config.yaml file to centralize deployment variables.
+
+### Changed
+- fix(custom-config): Updated nodejs and AWS SDK version
+- fix(network-config): Removed App2 subnets from the central network. These were used originally used for AWS Managed Active Directory; however, since MAD now supports running in a delegated account with IAM Identity Center, these are no longer needed. Customers should check there are no other resources deployed in these subnets prior to making change
+- feat(global-config): Enabled additional regions by default with CMK region excludes for cost optimization
+- fix(global-config): Add CWL subscription filter exclusion for organization CloudTrail logs
+- fix(docs): Updated broken link to install instructions
+- fix(docs): Updated documentation for Control Tower deployments with LZA v1.7.0
+
 ## [1.6.1-a] - 2024-03-04
 ### Added
 - feat(replacements): Added use of replacements-config.yaml file to centralize global variables.

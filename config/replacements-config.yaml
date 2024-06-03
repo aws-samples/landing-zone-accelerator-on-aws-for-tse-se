@@ -6,19 +6,53 @@
 ## https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/latest/classes/_aws_accelerator_config.ParameterReplacementConfigV2.html
 ######
 globalReplacements:
-# Name of CloudWatch log group that centralizes CloudTrail logs. Referenced by CloudWatch metrics and alarms
+  # Accelerator Prefix
+  - key: AcceleratorPrefix
+    type: String
+    value: AWSAccelerator
+  # Home Region
+  - key: AcceleratorHomeRegion
+    type: String
+    value: ca-central-1
+  # Security notification emails
+  - key: SecurityHigh
+    type: String
+    value: <notify-high>@example.com
+  - key: SecurityMedium
+    type: String
+    value: <notify-medium>@example.com
+  - key: SecurityLow
+    type: String
+    value: <notify-low>@example.com
+  - key: SecurityIgnore
+    type: String
+    value: <notify-ignore>@example.com
+  # Budget notification emails
+  - key: BudgetEmail
+    type: String
+    value: <budget-alert>@example.com
+  # Name of CloudWatch log group that centralizes CloudTrail logs. Referenced by CloudWatch metrics and alarms
   - key: CloudTrailLogGroup
     type: String
     value: aws-accelerator-cloudtrail-logs # UPDATE If using ControlTower change this to 'aws-controltower/CloudTrailLogs'
-# Domain name for Managed Active Directory
+  # Managed Active Directory settings
   - key: MadDnsName
     type: String
     value: example.local
   - key: MadNetbiosDomainName
     type: String
     value: example
-######
-# VPC CIDR definition. If you change these values you also need to update individual subnets range in network-config.yaml
+  - key: ActiveDirectoryConnectorEmail
+    type: String
+    value: example-adconnector-user@example.com
+  - key: ActiveDirectoryUserEmail
+    type: String
+    value: example-user1@example.com
+  - key: ActiveDirectoryReadonlyUserEmail
+    type: String
+    value: example-user2@example.com
+  ######
+  # VPC CIDR definition. If you change these values you also need to update individual subnets range in network-config.yaml
   - key: VpcCentralCidr
     type: String
     value: 10.1.0.0/16

@@ -1,11 +1,10 @@
-homeRegion: &HOME_REGION ca-central-1
 defaultVpc:
   delete: true
   excludeAccounts: []
 transitGateways:
   - name: Network-Main
     account: Network
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     shareTargets:
       organizationalUnits:
         - Infrastructure
@@ -42,14 +41,14 @@ centralNetworkServices:
   delegatedAdminAccount: Network
   ipams:
     - name: accelerator-ipam
-      region: *HOME_REGION
+      region: {{ AcceleratorHomeRegion }}
       description: Accelerator IPAM
       operatingRegions:
-        - *HOME_REGION
+        - {{ AcceleratorHomeRegion }}
       pools:
         - name: home-region-sandbox-pool
           description: Pool for sandbox environment
-          locale: *HOME_REGION
+          locale: {{ AcceleratorHomeRegion }}
           provisionedCidrs:
             - 10.0.0.0/8
           shareTargets:
@@ -57,9 +56,9 @@ centralNetworkServices:
               - Sandbox
   networkFirewall:
     firewalls:
-      - name: AWSAccelerator-firewall
-        region: *HOME_REGION
-        firewallPolicy: AWSAccelerator-policy
+      - name: "{{ AcceleratorPrefix }}-firewall"
+        region: {{ AcceleratorHomeRegion }}
+        firewallPolicy: "{{ AcceleratorPrefix }}-policy"
         subnets:
           - Perimeter-A
           - Perimeter-B
@@ -70,22 +69,22 @@ centralNetworkServices:
           - destination: cloud-watch-logs
             type: FLOW
     policies:
-      - name: AWSAccelerator-policy
+      - name: "{{ AcceleratorPrefix }}-policy"
         regions:
-          - *HOME_REGION
+          - {{ AcceleratorHomeRegion }}
         firewallPolicy:
           statelessDefaultActions: ["aws:forward_to_sfe"]
           statelessFragmentDefaultActions: ["aws:forward_to_sfe"]
           statefulRuleGroups:
-            - name: AWSAccelerator-rule-group
-            - name: AWSAccelerator-domain-list-group
+            - name: "{{ AcceleratorPrefix }}-rule-group"
+            - name: "{{ AcceleratorPrefix }}-domain-list-group"
         shareTargets:
           accounts:
             - Perimeter
     rules:
-      - name: AWSAccelerator-rule-group
+      - name: "{{ AcceleratorPrefix }}-rule-group"
         regions:
-          - *HOME_REGION
+          - {{ AcceleratorHomeRegion }}
         capacity: 100
         type: STATEFUL
         ruleGroup:
@@ -114,9 +113,9 @@ centralNetworkServices:
                 ruleOptions:
                   - keyword: sid
                     settings: ["200"]
-      - name: AWSAccelerator-domain-list-group
+      - name: "{{ AcceleratorPrefix }}-domain-list-group"
         regions:
-          - *HOME_REGION
+          - {{ AcceleratorHomeRegion }}
         capacity: 10
         type: STATEFUL
         ruleGroup:
@@ -150,7 +149,7 @@ centralNetworkServices:
           - Endpoint-A
           - Endpoint-B
         rules:
-          - name: AWSAccelerator-Endpoint-mad-example-local
+          - name: "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
             domainName: {{ MadDnsName }}
             targetIps:
               - ip: 1.1.1.1
@@ -170,7 +169,7 @@ centralNetworkServices:
     firewallRuleGroups:
       - name: accelerator-block-group
         regions:
-          - *HOME_REGION
+          - {{ AcceleratorHomeRegion }}
         rules:
           - name: managed-rule
             action: BLOCK
@@ -193,6 +192,28 @@ prefixLists:
     maxEntries: 1
     entries:
       - 10.1.0.1/32
+###################################################################################
+# Self signed certificates are deployed as an example.                            #
+# Replace by your own certificate or request them with Amazon Certificate Manager #
+###################################################################################
+certificates:
+  - name: PerimSelf-SignedCert
+    type: import
+    privKey: certs/example1-cert.key
+    cert: certs/example1-cert.crt
+    deploymentTargets:
+      accounts:
+        - Perimeter
+  - name: DevSelf-SignedCert
+    type: import
+    privKey: certs/example1-cert.key
+    cert: certs/example1-cert.crt
+    deploymentTargets:
+      organizationalUnits:
+        - Dev
+      accounts:
+        - Network
+###################################################################################
 endpointPolicies:
   - name: Default
     document: vpc-endpoint-policies/default.json
@@ -204,7 +225,7 @@ vpcs:
       - key: Name
         value: Endpoint
     account: Network
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     cidrs:
       - {{ VpcEndpointCidr }}
     defaultSecurityGroupRulesDeletion: true
@@ -331,13 +352,13 @@ vpcs:
         # - service: transfer.server
         # - service: workspaces
     resolverRules:
-      - AWSAccelerator-Endpoint-mad-example-local
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
   - name: Perimeter
     tags:
       - key: Name
         value: Perimeter
     account: Perimeter
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     cidrs:
       - {{ VpcPerimeterCidr }}
     defaultSecurityGroupRulesDeletion: true
@@ -348,34 +369,34 @@ vpcs:
           - name: NfwRoute
             destination: 0.0.0.0/0
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: NfwRouteToNatA
             destination: 10.7.7.176/28
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: NfwRouteToNatB
             destination: 10.7.7.192/28
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
       - name: Perimeter-Tgw-B
         routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
           - name: NfwRouteToNatA
             destination: 10.7.7.176/28
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: NfwRouteToNatB
             destination: 10.7.7.192/28
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
       - name: Perimeter-A
         routes:
@@ -414,7 +435,7 @@ vpcs:
           - name: NfwNatRoute
             destination: {{ AwsRangeCidr }}
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: IgwRoute
             destination: 0.0.0.0/0
@@ -425,7 +446,7 @@ vpcs:
           - name: NfwNatRoute
             destination: {{ AwsRangeCidr }}
             type: networkFirewall
-            target: AWSAccelerator-firewall
+            target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
           - name: IgwRoute
             destination: 0.0.0.0/0
@@ -461,6 +482,35 @@ vpcs:
         subnet: PerimeterNat-A
       - name: Nat-Perimeter-B
         subnet: PerimeterNat-B
+    securityGroups:
+      - name: "Public-Prod-ALB"
+        description: "Perimeter ALB Security Group for prod"
+        inboundRules:
+          - description: "HTTPS Traffic Inbound"
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Public-DevTest-ALB"
+        description: "Perimeter ALB Security Group for dev-test"
+        inboundRules:
+          - description: "HTTPS Traffic Inbound"
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
     transitGatewayAttachments:
       - name: Perimeter
         transitGateway:
@@ -480,12 +530,59 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: Public-Prod
+          scheme: internet-facing
+          subnets:
+            - PerimeterNat-A
+            - PerimeterNat-B
+          securityGroups:
+            - Public-Prod-ALB
+          listeners:
+            - name: alb-listener
+              port: 443
+              protocol: HTTPS
+              targetGroup: Public-Prod-tg
+              type: forward
+              certificate: PerimSelf-SignedCert
+              sslPolicy: ELBSecurityPolicy-FS-1-2-Res-2019-08
+        - name: Public-DevTest
+          scheme: internet-facing
+          subnets:
+            - PerimeterNat-A
+            - PerimeterNat-B
+          securityGroups:
+            - Public-DevTest-ALB
+          listeners:
+            - name: alb-listener
+              port: 443
+              protocol: HTTPS
+              targetGroup: Public-DevTest-tg
+              type: forward
+              certificate: PerimSelf-SignedCert
+              sslPolicy: ELBSecurityPolicy-FS-1-2-Res-2019-08
+    targetGroups:
+      - name: Public-Prod-tg
+        port: 443
+        protocol: HTTPS
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+      - name: Public-DevTest-tg
+        port: 443
+        protocol: HTTPS
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
   - name: Dev
     tags:
       - key: Name
         value: Dev
     account: Network
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     cidrs:
       - {{ VpcDevCidr }}
     defaultSecurityGroupRulesDeletion: true
@@ -794,13 +891,49 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
-      - AWSAccelerator-Endpoint-mad-example-local
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+    #######################################################################
+    # Example config to deploy backend ALB to multiple workload accounts  #
+    #######################################################################
+    # loadBalancers:
+    #   applicationLoadBalancers:
+    #     - name: core-dev-alb
+    #       scheme: internal
+    #       subnets:
+    #         - Dev-Web-A
+    #         - Dev-Web-B
+    #       securityGroups:
+    #         - Web
+    #       listeners:
+    #         - name: appA-listener-1
+    #           port: 443
+    #           protocol: HTTPS
+    #           order: 1
+    #           type: forward
+    #           targetGroup: core-dev-tg
+    #           certificate: DevSelf-SignedCert
+    #           sslPolicy: ELBSecurityPolicy-FS-1-2-Res-2019-08
+    #       shareTargets:
+    #         organizationalUnits:
+    #           - Dev
+    # targetGroups:
+    #   - name: core-dev-tg
+    #     port: 443
+    #     protocol: HTTPS
+    #     type: instance
+    #     connectionTermination: true
+    #     preserveClientIp: true
+    #     proxyProtocolV2: true
+    #     shareTargets:
+    #       organizationalUnits:
+    #         - Dev
+    ###########################################
   - name: Central
     tags:
       - key: Name
         value: Central
     account: Network
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     cidrs:
       - {{ VpcCentralCidr }}
     defaultSecurityGroupRulesDeletion: true
@@ -1060,29 +1193,6 @@ vpcs:
         availabilityZone: b
         routeTable: Central
         ipv4CidrBlock: 10.1.208.0/21
-
-      ## App2 subnets are shared only with Operations account. These are used
-      ## to deploy Managed AD instances, or other centrally managed, routable, resources.
-      - name: Central-App2-A
-        tags:
-          - key: Name
-            value: Central-App2-A
-        availabilityZone: a
-        routeTable: Central
-        ipv4CidrBlock: 10.1.0.128/25
-        shareTargets:
-          accounts:
-            - Operations
-      - name: Central-App2-B
-        tags:
-          - key: Name
-            value: Central-App2-B
-        availabilityZone: b
-        routeTable: Central
-        ipv4CidrBlock: 10.1.1.0/25
-        shareTargets:
-          accounts:
-            - Operations
     transitGatewayAttachments:
       - name: Central-Main
         transitGateway:
@@ -1104,13 +1214,13 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
-      - AWSAccelerator-Endpoint-mad-example-local
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
   - name: Test
     tags:
       - key: Name
         value: Test
     account: Network
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     cidrs:
       - {{ VpcTestCidr }}
     defaultSecurityGroupRulesDeletion: true
@@ -1417,13 +1527,13 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
-      - AWSAccelerator-Endpoint-mad-example-local
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
   - name: Prod
     tags:
       - key: Name
         value: Prod
     account: Network
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     cidrs:
       - {{ VpcProdCidr }}
     defaultSecurityGroupRulesDeletion: true
@@ -1730,10 +1840,10 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
-      - AWSAccelerator-Endpoint-mad-example-local
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
 vpcTemplates:
   - name: Sandbox-Template
-    region: *HOME_REGION
+    region: {{ AcceleratorHomeRegion }}
     deploymentTargets:
       organizationalUnits:
         - Sandbox

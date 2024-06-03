@@ -77,7 +77,7 @@ serviceControlPolicies:
   #      - Audit
   #      - LogArchive
   ## END
-  - name: AWSAccelerator-Guardrails-Unclass
+  - name: "{{ AcceleratorPrefix }}-Guardrails-Unclass"
     description: >
       LZA Guardrails Unclassified Environment Specific
     policy: service-control-policies/LZA-Guardrails-Unclass.json
@@ -85,7 +85,7 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - UnClass
-  - name: AWSAccelerator-Guardrails-Sandbox
+  - name: "{{ AcceleratorPrefix }}-Guardrails-Sandbox"
     description: >
       LZA Guardrails Sandbox Environment Specific
     policy: service-control-policies/LZA-Guardrails-Sandbox.json
@@ -93,14 +93,14 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Sandbox
-  - name: AWSAccelerator-Quarantine-New-Object
+  - name: "{{ AcceleratorPrefix }}-Quarantine-New-Object"
     description: >
       LZA Quarantine policy - Apply to ACCOUNTS that need to be quarantined
     policy: service-control-policies/Quarantine-New-Object.json
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
-  - name: AWSAccelerator-Guardrails-Part-0-Core
+  - name: "{{ AcceleratorPrefix }}-Guardrails-Part-0-Core"
     description: >
       LZA Guardrails Part 0 Core Accounts
     policy: service-control-policies/LZA-Guardrails-Part0-CoreOUs.json

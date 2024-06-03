@@ -36,19 +36,28 @@ Leave all other values as default, unless you have specific reasons to customize
 
 - Wait for the successful completion of the `AWSAccelerator-Pipeline` pipeline.
 
+## 2.4 Enable IAM Identity Center in the management account
+
+1. Login into the management account
+2. Make sure the region in the console is set to your home AWS Region
+3. Follow the guidance on [enabling AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/get-set-up-for-idc.html)
+
+> **Note:**
+> Don't configure delegated administration, this will be done by the LZA pipeline in the next steps.
+
 # 3. Deploy the reference architecture
 
-The Landing Zone Accelerator on AWS solution deploys an AWS CodeCommit repository called `aws-accelerator-config`, along with six customizable YAML configuration files. The YAML files are pre-populated with a minimal configuration for the solution. The configuration files found in this directory should replace the files in the default AWS CodeCommit repository after adjusting environment specific configurations.
+The Landing Zone Accelerator on AWS solution deploys an AWS CodeCommit repository called `aws-accelerator-config`, along with six customizable YAML configuration files. The YAML files are pre-populated with a minimal configuration for the solution. The configuration files found in this repo's '[config](./config/)' should replace the files in the default AWS CodeCommit repository after adjusting environment specific configurations.
 
 We recommend you read the LZA guidance on [using the configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/using-configuration-files.html), before continuing with the deployment of the reference architecture.
 
-We recommend you go through every configuration file and confirm the default values correspond to your needs. Pay careful attention to any comments provided in the configuration files. To facilitate futur updates of the reference configuration, we suggest you keep the same file structure and comment out parts that you don't need instead of removing them.
+We recommend you go through every configuration file and confirm the default values correspond to your needs. Pay careful attention to any comments provided in the configuration files. To facilitate future updates of the reference configuration, we suggest you keep the same file structure and comment out parts that you don't need instead of removing them.
 
 ## 3.1 Prepare the reference architecture configuration files
 
 1. Clone the `aws-accelerator-config` AWS CodeCommit repository. You can follow the instructions on [setting up AWS CodeCommit with git](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-git-remote-codecommit.html) to clone the repo.
-1. Clone this repository (`landing-zone-accelerator-on-aws-for-tse-se`)
-1. Copy the contents from the `config` folder in the repository `landing-zone-accelerator-on-aws-for-tse-se` to your local `aws-accelerator-config` repo. You may be prompted to overwrite duplicate configs, such as accounts-config.yaml.
+2. Clone this repository (`landing-zone-accelerator-on-aws-for-tse-se`)
+3. Copy the contents from the `config` folder in the repository `landing-zone-accelerator-on-aws-for-tse-se` to your local `aws-accelerator-config` repo. You may be prompted to overwrite duplicate configs, such as accounts-config.yaml.
 
 ## 3.2 Prepare additional organizational units
 
@@ -63,11 +72,33 @@ You can run the [`setup-organizational-units`](./reference-artifacts/organizatio
 ## 3.3 Mandatory customization
 
 Using the IDE of your choice, in your local `aws-accelerator-config` repo, update the following values:
-- replacements-config.yaml - This file contains global variables that can be referenced from all other configuration files. Review the value of each variable to confirm it is appropriate to your deployment.
-- accounts-config.yaml - Replace all the AWS Account email addresses with valid emails for the deployment. These are used to create AWS Accounts.
-- global-config.yaml - Replace all emails used for AWS Budgets and security notifications to match the email you allocated in the prerequisites.
-- iam-config.yaml - Replace the groupName and Active Directory user account details with those specified in the prerequisites.  **Note: ** the passwords for these accounts will be available via [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/).
-- This sample configuration is built using the **ca-central-1** AWS Region as the home or installation Region. If installing to a different home Region, then the five references to **ca-central-1** must be updated to reference your desired home Region in the following four configuration files (global-config, iam-config, network-config, security-config).
+- replacements-config.yaml - This file contains global variables that can be referenced from all other configuration files. Review the value of each variable to confirm it is appropriate to your deployment. **Note: ** the passwords for the active directory accounts will be available via [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/).
+- accounts-config.yaml - Update the config email addresses to match the email addresses you assigned in the prerequisites section.
+
+### 3.3.1 Changing the home Region
+
+If you are changing the home region from *ca-central-1* to  different region, you need to make the following configuration file modifications.
+
+- global-config.yaml - **homeRegion: &HOME_REGION ca-central-1** must be updated from *ca-central-1* to the region you are using as your home region, e.g. *homeRegion: &HOME_REGION eu-west-2*
+- global-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
+
+### 3.3.2 Changing the accelerator prefix
+
+If you changed the [accelerator prefix](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html) from **AWSAccelerator** during the LZA deployment, you need to make the following configuration file modifications.
+
+- global-config.yaml - update the **cdkOptions/customDeploymentRole** to *<custom prefix>-PipelineRole* e.g. *ExamplePrefix-PipelineRole*.
+- iam-config.yaml - update the **managedActiveDirectories/logs/groupName** to *<custom prefix>-/MAD/{{MadDnsName}}* e.g. */ExamplePrefix/MAD/{{MadDnsName}}*.
+- **dynamic-partitioning/log-filters.json** - update the acceleratorPrefix to *<custom prefix>*. For example if your prefix is *TSEProd*, the config file should look like the following:
+```
+[
+  { "logGroupPattern": "/TSEProd/MAD", "s3Prefix": "managed-ad" },
+  { "logGroupPattern": "/TSEProd/rql", "s3Prefix": "rql" },
+  { "logGroupPattern": "/TSEProd-SecurityHub", "s3Prefix": "security-hub" },
+  { "logGroupPattern": "TSEProdFirewallFlowLogGroup", "s3Prefix": "nfw" },
+  { "logGroupPattern": "/TSEProd/rsyslog", "s3Prefix": "rsyslog" },
+  { "logGroupPattern": "TSEProd-sessionmanager-logs", "s3Prefix": "ssm" }
+]
+```
 
 If you are deploying a demo environment for experimentation purposes, and don't need to perform any specific customization such as defining specific CIDR ranges that don't overlap with on-premises networks, you may wish to skip to the section on running the pipeline.
 
@@ -93,7 +124,21 @@ The shared network makes use of a contiguous CIDR. The is currently specified as
 
 You can choose to customize these ranges in the `replacements-config.yaml`, however take careful note when updating the config to also update subnet range, NACLs, Security Groups, Firewall rules and routing appropriately in `network-config.yaml`. 
 
-## 3.5 Running the pipeline
+## 3.5 Copy assets to assets buckets
+
+The sample configuration file uses self-signed certificates to attach to Application Load Balancers. Valid certificates need to be copied to the S3 assets bucket of your management account. (e.g. `aws-accelerator-assets-<account-id>-<home-region>`)
+
+The `network-config.yaml` references certificates used by the Application Load Balancers (ALB), but the sample certificates must be generated locally. Follow these instructions to generate sample certificates for the initial deployment and demonstration purposes. Ideally you would generate real certificates using your existing certificate authority. Note that the config references the sample certs in a `certs` folder, therefore, the sample certs must be in uploaded into a `certs` folder in the S3 bucket.
+
+```
+Example1:
+openssl req -newkey rsa:2048 -nodes -keyout example1-cert.key -out example1-cert.csr -subj "/C=CA/ST=Ontario/L=Ottawa/O=AnyCompany/CN=*.example.ca"
+openssl x509 -signkey example1-cert.key -in example1-cert.csr -req -days 1095 -out example1-cert.crt
+```
+
+You can also update the configuration to automatically request certificates from Amazon Certificate Manager (ACM). See the [CertificateConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/v1.6.2/classes/_aws_accelerator_config.CertificateConfig.html) documentation from LZA.
+
+## 3.6 Running the pipeline
 
 - Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
 - Release a change manually to the `AWSAccelerator-Pipeline` pipeline.

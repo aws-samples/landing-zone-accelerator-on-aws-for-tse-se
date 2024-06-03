@@ -1,12 +1,10 @@
-const AWS = require('aws-sdk');
-AWS.config.logger = console;
-
-const config = new AWS.ConfigService();
+const { ConfigServiceClient, PutEvaluationsCommand } = require("@aws-sdk/client-config-service");
+const client = new ConfigServiceClient();
 
 const APPLICABLE_RESOURCES = ['AWS::IAM::Role'];
 
 exports.handler = async function (event, context) {
-  console.log(`Custom Rule for checking policies attached to IAM role used under Instance Profile...`);
+  console.log(`Custom Rule for checking Policies attached to IAM role used under Instance Profile...`);
   console.log(JSON.stringify(event, null, 2));
 
   const invokingEvent = JSON.parse(event.invokingEvent);
@@ -28,25 +26,24 @@ exports.handler = async function (event, context) {
   console.debug(`Evaluation`);
   console.debug(JSON.stringify(evaluation, null, 2));
 
-  await config
-    .putEvaluations({
-      ResultToken: event.resultToken,
-      Evaluations: [
-        {
-          ComplianceResourceId: configurationItem.resourceId,
-          ComplianceResourceType: configurationItem.resourceType,
-          ComplianceType: evaluation.complianceType,
-          OrderingTimestamp: configurationItem.configurationItemCaptureTime,
-          Annotation: evaluation.annotation,
-        },
-      ],
-    })
-    .promise();
+  const payload = {
+    ResultToken: event.resultToken,
+    Evaluations: [
+      {
+        ComplianceResourceId: configurationItem.resourceId,
+        ComplianceResourceType: configurationItem.resourceType,
+        ComplianceType: evaluation.complianceType,
+        OrderingTimestamp: new Date(configurationItem.configurationItemCaptureTime),
+        Annotation: evaluation.annotation,
+      },
+    ],
+  };
+  const putEvaluationsCommand = new PutEvaluationsCommand(payload);
+  await client.send(putEvaluationsCommand);
 };
 
 async function evaluateCompliance(props) {
   const { configurationItem, ruleParams } = props;
-
   if (!APPLICABLE_RESOURCES.includes(configurationItem.resourceType)) {
     return {
       complianceType: 'NOT_APPLICABLE',
@@ -56,6 +53,11 @@ async function evaluateCompliance(props) {
     return {
       complianceType: 'NOT_APPLICABLE',
       annotation: 'The configuration item was deleted and could not be validated',
+    };
+  } else if (configurationItem.configurationItemStatus === 'ResourceNotRecorded' || configurationItem.configurationItemStatus === 'ResourceDeletedNotRecorded') {
+    return {
+      complianceType: 'NOT_APPLICABLE',
+      annotation: 'The configuration item is not recorded in this region and need not be validated',
     };
   }
 

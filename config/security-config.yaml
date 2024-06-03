@@ -1,9 +1,24 @@
-homeRegion: &HOME_REGION ca-central-1
 centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
     enable: true
-    excludeRegions: []
+    excludeRegions:
+      - ap-northeast-1
+      - ap-northeast-2
+      - ap-northeast-3
+      - ap-south-1
+      - ap-southeast-1
+      - ap-southeast-2
+      - eu-central-1
+      - eu-north-1
+      - eu-west-1
+      - eu-west-2
+      - eu-west-3
+      - sa-east-1
+      - us-east-1
+      - us-east-2
+      - us-west-1
+      - us-west-2
   scpRevertChangesConfig:
     enable: true
     snsTopicName: SecurityHigh
@@ -12,7 +27,8 @@ centralSecurityServices:
     excludeAccounts: []
   macie:
     enable: true
-    excludeRegions: []
+    excludeRegions:
+      - ca-west-1 # does not support macie
     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
     publishSensitiveDataFindings: true
   guardduty:
@@ -30,7 +46,8 @@ centralSecurityServices:
       exportFrequency: FIFTEEN_MINUTES
   auditManager:
     enable: false
-    excludeRegions: []
+    excludeRegions:
+      - ca-west-1 # Does not support Audit Manager
     defaultReportsConfiguration:
       enable: true
       destinationType: S3
@@ -67,6 +84,23 @@ centralSecurityServices:
       cloudWatch:
         enable: true
   ssmAutomation:
+    excludeRegions:
+      - ap-northeast-1
+      - ap-northeast-2
+      - ap-northeast-3
+      - ap-south-1
+      - ap-southeast-1
+      - ap-southeast-2
+      - eu-central-1
+      - eu-north-1
+      - eu-west-1
+      - eu-west-2
+      - eu-west-3
+      - sa-east-1
+      - us-east-1
+      - us-east-2
+      - us-west-1
+      - us-west-2
     documentSets:
       - shareTargets:
           organizationalUnits:
@@ -82,19 +116,19 @@ centralSecurityServices:
             - Management
         documents:
           # Calls the AWS CLI to enable access logs on a specified ELB
-          - name: AWSAccelerator-SSM-ELB-Enable-Logging
+          - name: "{{ AcceleratorPrefix }}-SSM-ELB-Enable-Logging"
             template: ssm-documents/ssm-elb-enable-logging.yaml
           # Enables S3 encryption using KMS
-          - name: AWSAccelerator-Put-S3-Encryption
+          - name: "{{ AcceleratorPrefix }}-Put-S3-Encryption"
             template: ssm-documents/s3-encryption.yaml
           # Attaches instance profiles to an EC2 instance
-          - name: AWSAccelerator-Attach-IAM-Instance-Profile
+          - name: "{{ AcceleratorPrefix }}-Attach-IAM-Instance-Profile"
             template: ssm-documents/attach-iam-instance-profile.yaml
           # Attaches Aws IAM Managed Policy to IAM Role
-          - name: AWSAccelerator-Attach-IAM-Role-Policy
+          - name: "{{ AcceleratorPrefix }}-Attach-IAM-Role-Policy"
             template: ssm-documents/attach-iam-role-policy.yaml
           # Enforces HTTPS on S3 Buckets
-          - name: AWSAccelerator-S3-Enforce-HTTPS
+          - name: "{{ AcceleratorPrefix }}-S3-Enforce-HTTPS"
             template: ssm-documents/s3-enforce-https.yaml
 accessAnalyzer:
   enable: true
@@ -119,7 +153,8 @@ awsConfig:
   ## END
   ruleSets:
     - deploymentTargets:
-        ## GLOBAL Section for config rules across all OUs + Management Account
+        ## GLOBAL Section for config rules across all OUs + Management Account.
+        ## Applicable to all regions with workloads
         organizationalUnits:
           - Security
           - Infrastructure
@@ -131,15 +166,32 @@ awsConfig:
           - Sandbox
         accounts:
           - Management
+        excludedRegions:
+          - ap-northeast-1
+          - ap-northeast-2
+          - ap-northeast-3
+          - ap-south-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - eu-central-1
+          - eu-north-1
+          - eu-west-1
+          - eu-west-2
+          - eu-west-3
+          - sa-east-1
+          - us-east-1
+          - us-east-2
+          - us-west-1
+          - us-west-2
       rules:
-        - name: AWSAccelerator-s3-bucket-server-side-encryption-enabled
+        - name: "{{ AcceleratorPrefix }}-s3-bucket-server-side-encryption-enabled"
           identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
           complianceResourceTypes:
             - AWS::S3::Bucket
           remediation:
             rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
             automatic: true
-            targetId: AWSAccelerator-Put-S3-Encryption
+            targetId: "{{ AcceleratorPrefix }}-Put-S3-Encryption"
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
@@ -149,34 +201,21 @@ awsConfig:
               - name: KMSMasterKey
                 value: ${ACCEL_LOOKUP::KMS}
                 type: StringList
-        - name: AWSAccelerator-s3-bucket-enforce-https
+        - name: "{{ AcceleratorPrefix }}-s3-bucket-enforce-https"
           identifier: S3_BUCKET_SSL_REQUESTS_ONLY
           complianceResourceTypes:
             - AWS::S3::Bucket
           remediation:
             rolePolicyFile: custom-config-rules/bucket-enforce-https-remediation-role.json
             automatic: true
-            targetId: AWSAccelerator-S3-Enforce-HTTPS
+            targetId: "{{ AcceleratorPrefix }}-S3-Enforce-HTTPS"
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
               - name: BucketName
                 value: RESOURCE_ID
                 type: String
-    - deploymentTargets:
-        ##  Section for config rules across all OUs except Sandbox + Management Account
-        organizationalUnits:
-          - Security
-          - Infrastructure
-          - Central
-          - Dev
-          - Test
-          - Prod
-          - UnClass
-        accounts:
-          - Management
-      rules:
-        - name: AWSAccelerator-attach-ec2-instance-profile
+        - name: "{{ AcceleratorPrefix }}-attach-ec2-instance-profile"
           type: Custom
           description: Custom rule for checking EC2 instance IAM profile attachment
           inputParameters:
@@ -184,7 +223,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs16.x
+              runtime: nodejs18.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -197,7 +236,7 @@ awsConfig:
           remediation:
             rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-remediation-role.json
             automatic: true
-            targetId: AWSAccelerator-Attach-IAM-Instance-Profile
+            targetId: "{{ AcceleratorPrefix }}-Attach-IAM-Instance-Profile"
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
@@ -207,7 +246,7 @@ awsConfig:
               - name: IamInstanceProfile
                 value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
                 type: StringList
-        - name: AWSAccelerator-ec2-instance-profile-permission
+        - name: "{{ AcceleratorPrefix }}-ec2-instance-profile-permission"
           type: Custom
           description: Custom role to remediate EC2 instance profile permission
           inputParameters:
@@ -217,7 +256,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs16.x
+              runtime: nodejs18.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -230,7 +269,7 @@ awsConfig:
           remediation:
             rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-remediation-role.json
             automatic: true
-            targetId: AWSAccelerator-Attach-IAM-Role-Policy
+            targetId: "{{ AcceleratorPrefix }}-Attach-IAM-Role-Policy"
             targetAccountName: Audit
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
@@ -241,7 +280,7 @@ awsConfig:
               - name: AWSManagedPolicies
                 value: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
                 type: StringList
-        - name: AWSAccelerator-elb-logging-enabled
+        - name: "{{ AcceleratorPrefix }}-elb-logging-enabled"
           identifier: ELB_LOGGING_ENABLED
           complianceResourceTypes:
             - AWS::ElasticLoadBalancing::LoadBalancer
@@ -251,7 +290,7 @@ awsConfig:
           remediation:
             rolePolicyFile: custom-config-rules/elb-logging-enabled-remediation-role.json
             automatic: true
-            targetId: AWSAccelerator-SSM-ELB-Enable-Logging
+            targetId: "{{ AcceleratorPrefix }}-SSM-ELB-Enable-Logging"
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
@@ -261,23 +300,78 @@ awsConfig:
               - name: LogDestination
                 value: ${ACCEL_LOOKUP::Bucket:elbLogs}
                 type: StringList
-        - name: AWSAccelerator-acm-certificate-expiration-check
+    - deploymentTargets:
+        ##  Section for config rules across all OUs except Sandbox + Management Account
+        ## Rules not supported in ap-northeast-3 AND ca-west-1
+        organizationalUnits:
+          - Security
+          - Infrastructure
+          - Central
+          - Dev
+          - Test
+          - Prod
+          - UnClass
+        accounts:
+          - Management
+        excludedRegions:
+          - ap-northeast-3
+          - ca-west-1
+      rules:
+        - name: "{{ AcceleratorPrefix }}-sagemaker-notebook-instance-kms-key-configured"
+          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
+        - name: "{{ AcceleratorPrefix }}-wafv2-logging-enabled"
+          identifier: WAFV2_LOGGING_ENABLED
+        - name: "{{ AcceleratorPrefix }}-dynamodb-in-backup-plan"
+          identifier: DYNAMODB_IN_BACKUP_PLAN
+        - name: "{{ AcceleratorPrefix }}-sagemaker-endpoint-configuration-kms-key-configured"
+          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
+        - name: "{{ AcceleratorPrefix }}-ebs-in-backup-plan"
+          identifier: EBS_IN_BACKUP_PLAN
+        - name: "{{ AcceleratorPrefix }}-rds-in-backup-plan"
+          identifier: RDS_IN_BACKUP_PLAN
+        - name: "{{ AcceleratorPrefix }}-elb-acm-certificate-required"
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancing::LoadBalancer
+          identifier: ELB_ACM_CERTIFICATE_REQUIRED
+        - name: "{{ AcceleratorPrefix }}-securityhub-enabled"
+          identifier: SECURITYHUB_ENABLED
+        - name: "{{ AcceleratorPrefix }}-ec2-managedinstance-patch-compliance-status-check"
+          identifier: EC2_MANAGEDINSTANCE_PATCH_COMPLIANCE_STATUS_CHECK
+        - name: "{{ AcceleratorPrefix }}-internet-gateway-authorized-vpc-only"
+          complianceResourceTypes:
+            - AWS::EC2::InternetGateway
+          identifier: INTERNET_GATEWAY_AUTHORIZED_VPC_ONLY
+        - name: "{{ AcceleratorPrefix }}-dynamodb-table-encrypted-kms"
+          complianceResourceTypes:
+            - AWS::DynamoDB::Table
+          identifier: DYNAMODB_TABLE_ENCRYPTED_KMS
+        - name: "{{ AcceleratorPrefix }}-acm-certificate-expiration-check"
           inputParameters:
             daysToExpiration: "90"
           identifier: ACM_CERTIFICATE_EXPIRATION_CHECK
-        - name: AWSAccelerator-alb-waf-enabled
+        - name: "{{ AcceleratorPrefix }}-alb-waf-enabled"
           identifier: ALB_WAF_ENABLED
-        - name: AWSAccelerator-api-gw-cache-enabled-and-encrypted
-          complianceResourceTypes:
-            - AWS::ApiGateway::Stage
-          identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED
-        - name: AWSAccelerator-cloudtrail-enabled
+    - deploymentTargets:
+        ##  Section for config rules across all OUs except Sandbox + Management Account
+        ## Rules not supported in ap-northeast-3 ONLY
+        organizationalUnits:
+          - Security
+          - Infrastructure
+          - Central
+          - Dev
+          - Test
+          - Prod
+          - UnClass
+        accounts:
+          - Management
+        excludedRegions:
+          - ap-northeast-3
+      rules:
+        - name: "{{ AcceleratorPrefix }}-cloudtrail-enabled"
           identifier: CLOUD_TRAIL_ENABLED
-        - name: AWSAccelerator-cloudtrail-s3-dataevents-enabled
-          identifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED
-        - name: AWSAccelerator-cloudtrail-security-trail-enabled
+        - name: "{{ AcceleratorPrefix }}-cloudtrail-security-trail-enabled"
           identifier: CLOUDTRAIL_SECURITY_TRAIL_ENABLED
-        - name: AWSAccelerator-cloudwatch-alarm-action-check
+        - name: "{{ AcceleratorPrefix }}-cloudwatch-alarm-action-check"
           complianceResourceTypes:
             - AWS::CloudWatch::Alarm
           inputParameters:
@@ -285,76 +379,31 @@ awsConfig:
             insufficientDataActionRequired: "TRUE"
             okActionRequired: "FALSE"
           identifier: CLOUDWATCH_ALARM_ACTION_CHECK
-        - name: AWSAccelerator-cw-loggroup-retention-period-check
+        - name: "{{ AcceleratorPrefix }}-cw-loggroup-retention-period-check"
           identifier: CW_LOGGROUP_RETENTION_PERIOD_CHECK
-        - name: AWSAccelerator-db-instance-backup-enabled
+        - name: "{{ AcceleratorPrefix }}-db-instance-backup-enabled"
           identifier: DB_INSTANCE_BACKUP_ENABLED
-        - name: AWSAccelerator-dynamodb-in-backup-plan
-          identifier: DYNAMODB_IN_BACKUP_PLAN
-        - name: AWSAccelerator-dynamodb-table-encrypted-kms
-          complianceResourceTypes:
-            - AWS::DynamoDB::Table
-          identifier: DYNAMODB_TABLE_ENCRYPTED_KMS
-        - name: AWSAccelerator-ebs-in-backup-plan
-          identifier: EBS_IN_BACKUP_PLAN
-        - name: AWSAccelerator-ec2-instance-detailed-monitoring-enabled
+        - name: "{{ AcceleratorPrefix }}-ec2-instance-detailed-monitoring-enabled"
           complianceResourceTypes:
             - AWS::EC2::Instance
           identifier: EC2_INSTANCE_DETAILED_MONITORING_ENABLED
-        - name: AWSAccelerator-ec2-managedinstance-patch-compliance-status-check
-          identifier: EC2_MANAGEDINSTANCE_PATCH_COMPLIANCE_STATUS_CHECK
-        - name: AWSAccelerator-ec2-volume-inuse-check
-          inputParameters:
-            deleteOnTermination: "TRUE"
-          complianceResourceTypes:
-            - AWS::EC2::Volume
-          identifier: EC2_VOLUME_INUSE_CHECK
-        - name: AWSAccelerator-elasticache-redis-cluster-automatic-backup-check
-          identifier: ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK
-        - name: AWSAccelerator-elb-acm-certificate-required
-          complianceResourceTypes:
-            - AWS::ElasticLoadBalancing::LoadBalancer
-          identifier: ELB_ACM_CERTIFICATE_REQUIRED
-        - name: AWSAccelerator-elb-cross-zone-load-balancing-enabled
+        - name: "{{ AcceleratorPrefix }}-elb-cross-zone-load-balancing-enabled"
           complianceResourceTypes:
             - AWS::ElasticLoadBalancing::LoadBalancer
           identifier: ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED
-        - name: AWSAccelerator-emr-kerberos-enabled
-          identifier: EMR_KERBEROS_ENABLED
-        - name: AWSAccelerator-guardduty-non-archived-findings
+        - name: "{{ AcceleratorPrefix }}-guardduty-non-archived-findings"
           inputParameters:
             daysHighSev: "1"
             daysLowSev: "30"
             daysMediumSev: "7"
           identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
-        - name: AWSAccelerator-iam-group-has-users-check
-          complianceResourceTypes:
-            - AWS::IAM::Group
-          identifier: IAM_GROUP_HAS_USERS_CHECK
-        - name: AWSAccelerator-iam-user-group-membership-check
-          complianceResourceTypes:
-            - AWS::IAM::User
-          identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
-        - name: AWSAccelerator-incoming-ssh-disabled
+        - name: "{{ AcceleratorPrefix }}-incoming-ssh-disabled"
           identifier: INCOMING_SSH_DISABLED
-        - name: AWSAccelerator-ec2-instances-in-vpc
+        - name: "{{ AcceleratorPrefix }}-ec2-instances-in-vpc"
           complianceResourceTypes:
             - AWS::EC2::Instance
           identifier: INSTANCES_IN_VPC
-        - name: AWSAccelerator-internet-gateway-authorized-vpc-only
-          complianceResourceTypes:
-            - AWS::EC2::InternetGateway
-          identifier: INTERNET_GATEWAY_AUTHORIZED_VPC_ONLY
-        - name: AWSAccelerator-rds-in-backup-plan
-          identifier: RDS_IN_BACKUP_PLAN
-        - name: AWSAccelerator-redshift-cluster-configuration-check
-          inputParameters:
-            clusterDbEncrypted: "TRUE"
-            loggingEnabled: "TRUE"
-          complianceResourceTypes:
-            - AWS::Redshift::Cluster
-          identifier: REDSHIFT_CLUSTER_CONFIGURATION_CHECK
-        - name: AWSAccelerator-restricted-incoming-traffic
+        - name: "{{ AcceleratorPrefix }}-restricted-incoming-traffic"
           inputParameters:
             blockedPort1: "20"
             blockedPort2: "21"
@@ -362,179 +411,218 @@ awsConfig:
             blockedPort4: "3306"
             blockedPort5: "4333"
           identifier: RESTRICTED_INCOMING_TRAFFIC
-        - name: AWSAccelerator-s3-bucket-policy-grantee-check
-          complianceResourceTypes:
-            - AWS::S3::Bucket
-          identifier: S3_BUCKET_POLICY_GRANTEE_CHECK
-        - name: AWSAccelerator-s3-bucket-versioning-enabled
+        - name: "{{ AcceleratorPrefix }}-s3-bucket-versioning-enabled"
           complianceResourceTypes:
             - AWS::S3::Bucket
           identifier: S3_BUCKET_VERSIONING_ENABLED
-        - name: AWSAccelerator-sagemaker-endpoint-configuration-kms-key-configured
-          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
-        - name: AWSAccelerator-sagemaker-notebook-instance-kms-key-configured
-          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
-        - name: AWSAccelerator-securityhub-enabled
-          identifier: SECURITYHUB_ENABLED
-        - name: AWSAccelerator-vpc-sg-open-only-to-authorized-ports
+        - name: "{{ AcceleratorPrefix }}-vpc-sg-open-only-to-authorized-ports"
           inputParameters:
             authorizedTcpPorts: "443"
             authorizedUdpPorts: "1020-1025"
           complianceResourceTypes:
             - AWS::EC2::SecurityGroup
           identifier: VPC_SG_OPEN_ONLY_TO_AUTHORIZED_PORTS
-        - name: AWSAccelerator-wafv2-logging-enabled
-          identifier: WAFV2_LOGGING_ENABLED
+    - deploymentTargets:
+        ##  Section for config rules across all OUs except Sandbox + Management Account
+        ## Rules not supported in ca-west-1 ONLY
+        organizationalUnits:
+          - UnClass
+          - Security
+          - Prod
+          - Dev
+          - Test
+          - Central
+          - Infrastructure
+        accounts:
+          - Management
+        excludedRegions:
+          - ca-west-1
+      rules:
+        - name: "{{ AcceleratorPrefix }}-redshift-cluster-configuration-check"
+          inputParameters:
+            clusterDbEncrypted: "TRUE"
+            loggingEnabled: "TRUE"
+          complianceResourceTypes:
+            - AWS::Redshift::Cluster
+          identifier: REDSHIFT_CLUSTER_CONFIGURATION_CHECK
+        - name: "{{ AcceleratorPrefix }}-s3-bucket-policy-grantee-check"
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_BUCKET_POLICY_GRANTEE_CHECK
+        - name: "{{ AcceleratorPrefix }}-iam-user-group-membership-check"
+          complianceResourceTypes:
+            - AWS::IAM::User
+          identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
+        - name: "{{ AcceleratorPrefix }}-cloudtrail-s3-dataevents-enabled"
+          identifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED
+        - name: "{{ AcceleratorPrefix }}-iam-group-has-users-check"
+          complianceResourceTypes:
+            - AWS::IAM::Group
+          identifier: IAM_GROUP_HAS_USERS_CHECK
+        - name: "{{ AcceleratorPrefix }}-api-gw-cache-enabled-and-encrypted"
+          complianceResourceTypes:
+            - AWS::ApiGateway::Stage
+          identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED
+        - name: "{{ AcceleratorPrefix }}-ec2-volume-inuse-check"
+          inputParameters:
+            deleteOnTermination: "TRUE"
+          complianceResourceTypes:
+            - AWS::EC2::Volume
+          identifier: EC2_VOLUME_INUSE_CHECK
+        - name: "{{ AcceleratorPrefix }}-elasticache-redis-cluster-automatic-backup-check"
+          identifier: ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK
+        - name: "{{ AcceleratorPrefix }}-emr-kerberos-enabled"
+          identifier: EMR_KERBEROS_ENABLED
 cloudWatch:
   metricSets:
     - regions:
-        - *HOME_REGION
+        - "{{AcceleratorHomeRegion}}"
       deploymentTargets:
         accounts:
           - Management
       metrics:
         # CIS 1.1 – Avoid the use of the "root" account
-        - filterName: AWSAccelerator-RootAccountMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-RootAccountMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: CloudTrailMetrics
           metricName: RootAccount
           metricValue: "1"
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
-        - filterName: AWSAccelerator-UnauthorizedAPICallsMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-UnauthorizedAPICallsMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'
           metricNamespace: CloudTrailMetrics
           metricName: UnauthorizedAPICalls
           metricValue: "1"
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
-        - filterName: AWSAccelerator-ConsoleSigninWithoutMFAMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-ConsoleSigninWithoutMFAMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && ($.userIdentity.type = "IAMUser") && ($.responseElements.ConsoleLogin = "Success")}'
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleSigninWithoutMFA
           metricValue: "1"
         # CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
-        # - filterName: AWSAccelerator-MetricFilter
+        # - filterName: {{ AcceleratorPrefix }}-MetricFilter
         #   logGroupName: {{ CloudTrailLogGroup }}
         #   filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
         #   metricNamespace: CloudTrailMetrics
         #   metricName: RootAccountUsage
         #   metricValue: "1"
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
-        - filterName: AWSAccelerator-IAMPolicyChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-IAMPolicyChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}"
           metricNamespace: CloudTrailMetrics
           metricName: IAMPolicyChanges
           metricValue: "1"
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
-        - filterName: AWSAccelerator-CloudTrailChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-CloudTrailChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}"
           metricNamespace: CloudTrailMetrics
           metricName: CloudTrailChanges
           metricValue: "1"
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
-        - filterName: AWSAccelerator-ConsoleAuthenticationFailureMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-ConsoleAuthenticationFailureMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}'
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleAuthenticationFailure
           metricValue: "1"
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
-        - filterName: AWSAccelerator-DisableOrDeleteCMKMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-DisableOrDeleteCMKMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}"
           metricNamespace: CloudTrailMetrics
           metricName: DisableOrDeleteCMK
           metricValue: "1"
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
-        - filterName: AWSAccelerator-S3BucketPolicyChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-S3BucketPolicyChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}"
           metricNamespace: CloudTrailMetrics
           metricName: S3BucketPolicyChanges
           metricValue: "1"
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
-        - filterName: AWSAccelerator-AWSConfigChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-AWSConfigChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}"
           metricNamespace: CloudTrailMetrics
           metricName: AWSConfigChanges
           metricValue: "1"
         # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
-        - filterName: AWSAccelerator-SecurityGroupChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-SecurityGroupChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}"
           metricNamespace: CloudTrailMetrics
           metricName: SecurityGroupChanges
           metricValue: "1"
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
-        - filterName: AWSAccelerator-NetworkACLChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-NetworkACLChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}"
           metricNamespace: CloudTrailMetrics
           metricName: NetworkACLChanges
           metricValue: "1"
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
-        - filterName: AWSAccelerator-NetworkGatewayChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-NetworkGatewayChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}"
           metricNamespace: CloudTrailMetrics
           metricName: NetworkGatewayChanges
           metricValue: "1"
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
-        - filterName: AWSAccelerator-RouteTableChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-RouteTableChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}"
           metricNamespace: CloudTrailMetrics
           metricName: RouteTableChanges
           metricValue: "1"
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
-        - filterName: AWSAccelerator-VPCChangesMetricFilter
+        - filterName: "{{ AcceleratorPrefix }}-VPCChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}"
           metricNamespace: CloudTrailMetrics
           metricName: VPCChanges
           metricValue: "1"
-        - filterName: AWSAccelerator-Ec2InstanceChangeMetric
+        - filterName: "{{ AcceleratorPrefix }}-Ec2InstanceChangeMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventName = RunInstances) || ($.eventName = RebootInstances)|| ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName= TerminateInstances) }"
           metricNamespace: CloudTrailMetrics
           metricName: EC2InstanceEventCount
           metricValue: "1"
-        - filterName: AWSAccelerator-Ec2LargeInstanceChangeMetric
+        - filterName: "{{ AcceleratorPrefix }}-Ec2LargeInstanceChangeMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ (($.eventName = RunInstances) || ($.eventName = RebootInstances)|| ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName= TerminateInstances)) && (($.requestParameters.instanceType= *.32xlarge) || ($.requestParameters.instanceType= *.24xlarge) || ($.requestParameters.instanceType= *.18xlarge) || ($.requestParameters.instanceType= *.16xlarge) || ($.requestParameters.instanceType= *.12xlarge) || ($.requestParameters.instanceType= *.10xlarge) || ($.requestParameters.instanceType= *.9xlarge) || ($.requestParameters.instanceType= *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }"
           metricNamespace: CloudTrailMetrics
           metricName: EC2LargeInstanceEventCount
           metricValue: "1"
-        - filterName: AWSAccelerator-SSOAuthUnapprovedIPMetric
+        - filterName: "{{ AcceleratorPrefix }}-SSOAuthUnapprovedIPMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventSource=sso.amazonaws.com) && ($.eventName=Authenticate) && ($.sourceIPAddress != 10.10.10.*) }" # Needs Updating
           metricNamespace: CloudTrailMetrics
           metricName: SSOAuthUnapprovedIPCount
           metricValue: "1"
-        - filterName: AWSAccelerator-IAMAuthUnapprovedIPMetric
+        - filterName: "{{ AcceleratorPrefix }}-IAMAuthUnapprovedIPMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventName=ConsoleLogin) && ($.userIdentity.type=IAMUser) && ($.sourceIPAddress != 10.10.10.*) }" # Needs Updating
           metricNamespace: CloudTrailMetrics
           metricName: IAMAuthUnapprovedIPCount
           metricValue: "1"
-        - filterName: AWSAccelerator-UnencryptedFilesystemCreatedMetric
+        - filterName: "{{ AcceleratorPrefix }}-UnencryptedFilesystemCreatedMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{ ($.eventName = CreateFileSystem) && ($.responseElements.encrypted IS FALSE) }"
           metricNamespace: CloudTrailMetrics
           metricName: UnencryptedFilesystemCreatedCount
           metricValue: "1"
-        - filterName: AWSAccelerator-IgnoreAuthorizationFailureMetric
+        - filterName: "{{ AcceleratorPrefix }}-IgnoreAuthorizationFailureMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.errorCode=\"*UnauthorizedOperation\") || ($.errorCode=\"AccessDenied*\")}"
           metricNamespace: CloudTrailMetrics
           metricName: IgnoreAuthorizationFailureCount
           metricValue: "1"
-        - filterName: AWSAccelerator-IgnoreConsoleSignInWithoutMfaMetric
+        - filterName: "{{ AcceleratorPrefix }}-IgnoreConsoleSignInWithoutMfaMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=\"ConsoleLogin\") && ($.additionalEventData.MFAUsed !=\"Yes\")}"
           metricNamespace: CloudTrailMetrics
@@ -542,13 +630,13 @@ cloudWatch:
           metricValue: "1"
   alarmSets:
     - regions:
-        - *HOME_REGION
+        - {{ AcceleratorHomeRegion }}
       deploymentTargets:
         accounts:
           - Management
       alarms:
         # CIS 1.1 – Avoid the use of the "root" account
-        - alarmName: AWSAccelerator-CIS-1.1-RootAccountUsage
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-1.1-RootAccountUsage"
           alarmDescription: Alarm for usage of "root" account
           snsTopicName: SecurityLow
           metricName: RootAccountUsage
@@ -560,7 +648,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
-        - alarmName: AWSAccelerator-CIS-3.1-UnauthorizedAPICalls
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.1-UnauthorizedAPICalls"
           alarmDescription: Alarm for unauthorized API calls
           snsTopicName: SecurityLow
           metricName: UnauthorizedAPICalls
@@ -572,7 +660,7 @@ cloudWatch:
           threshold: 5
           treatMissingData: notBreaching
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
-        - alarmName: AWSAccelerator-CIS-3.2-ConsoleSigninWithoutMFA
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.2-ConsoleSigninWithoutMFA"
           alarmDescription: Alarm for AWS Management Console sign-in without MFA
           snsTopicName: SecurityHigh
           metricName: ConsoleSigninWithoutMFA
@@ -597,7 +685,7 @@ cloudWatch:
         #   threshold: 1
         #   treatMissingData: notBreaching
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
-        - alarmName: AWSAccelerator-CIS-3.4-IAMPolicyChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.4-IAMPolicyChanges"
           alarmDescription: Alarm for IAM policy changes
           snsTopicName: SecurityMedium
           metricName: IAMPolicyChanges
@@ -609,7 +697,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
-        - alarmName: AWSAccelerator-CIS-3.5-CloudTrailChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.5-CloudTrailChanges"
           alarmDescription: Alarm for CloudTrail configuration changes
           snsTopicName: SecurityHigh
           metricName: CloudTrailChanges
@@ -621,7 +709,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
-        - alarmName: AWSAccelerator-CIS-3.6-ConsoleAuthenticationFailure
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.6-ConsoleAuthenticationFailure"
           alarmDescription: Alarm exist for AWS Management Console authentication failures
           snsTopicName: SecurityLow
           metricName: ConsoleAuthenticationFailure
@@ -633,7 +721,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
-        - alarmName: AWSAccelerator-CIS-3.7-DisableOrDeleteCMK
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.7-DisableOrDeleteCMK"
           alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
           snsTopicName: SecurityHigh
           metricName: DisableOrDeleteCMK
@@ -645,7 +733,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
-        - alarmName: AWSAccelerator-CIS-3.8-S3BucketPolicyChanges.
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.8-S3BucketPolicyChanges"
           alarmDescription: Alarm for S3 bucket policy changes
           snsTopicName: SecurityMedium
           metricName: S3BucketPolicyChanges
@@ -657,7 +745,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
-        - alarmName: AWSAccelerator-CIS-3.9-AWSConfigChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.9-AWSConfigChanges"
           alarmDescription: Alarm for AWS Config configuration changes
           snsTopicName: SecurityHigh
           metricName: AWSConfigChanges
@@ -669,7 +757,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
-        - alarmName: AWSAccelerator-CIS-3.10-SecurityGroupChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.10-SecurityGroupChanges"
           alarmDescription: Alarm for security group changes
           snsTopicName: SecurityLow
           metricName: SecurityGroupChanges
@@ -681,7 +769,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
-        - alarmName: AWSAccelerator-CIS-3.11-NetworkACLChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.11-NetworkACLChanges"
           alarmDescription: Alarm for changes to Network Access Control Lists (NACL)
           snsTopicName: SecurityMedium
           metricName: NetworkACLChanges
@@ -693,7 +781,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
-        - alarmName: AWSAccelerator-CIS-3.12-NetworkGatewayChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.12-NetworkGatewayChanges"
           alarmDescription: Alarm for changes to network gateways
           snsTopicName: SecurityMedium
           metricName: NetworkGatewayChanges
@@ -705,7 +793,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
-        - alarmName: AWSAccelerator-CIS-3.13-RouteTableChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.13-RouteTableChanges"
           alarmDescription: Alarm for route table changes
           snsTopicName: SecurityMedium
           metricName: RouteTableChanges
@@ -717,7 +805,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
-        - alarmName: AWSAccelerator-CIS-3.14-VPCChanges
+        - alarmName: "{{ AcceleratorPrefix }}-CIS-3.14-VPCChanges"
           alarmDescription: Alarm for VPC changes
           snsTopicName: SecurityMedium
           metricName: VPCChanges
@@ -728,7 +816,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-EC2-Instances-Changed
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-EC2-Instances-Changed"
           alarmDescription: Alarms when one or more API calls are made to create, terminate, start, stop or reboot any EC2 instance (in any account, any region of your AWS Organization).
           snsTopicName: SecurityLow
           metricName: EC2InstanceEventCount
@@ -739,7 +827,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-EC2-Large-Instance-Changed
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-EC2-Large-Instance-Changed"
           alarmDescription: Alarms when one or more API calls are made to create, terminate, start, stop or reboot a 4x, 8x, 9x, 10x, 12x, 16x, 18x, 24x, 32x-large EC2 instance (in any account, any region of your AWS Organization).
           snsTopicName: SecurityMedium
           metricName: EC2LargeInstanceEventCount
@@ -750,7 +838,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-SSO-Authentication-From-Unapproved-IP
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-SSO-Authentication-From-Unapproved-IP"
           alarmDescription: Alarms when someone authenticates using AWS SSO from an unauthorized IP address range.
           snsTopicName: SecurityHigh
           metricName: SSOAuthUnapprovedIPCount
@@ -761,7 +849,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-IAM-Authentication-From-Unapproved-IP
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-IAM-Authentication-From-Unapproved-IP"
           alarmDescription: Alarms when someone authenticates using AWS IAM from an unauthorized IP address range.
           snsTopicName: SecurityHigh
           metricName: IAMAuthUnapprovedIPCount
@@ -772,7 +860,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-Unencrypted-Filesystem-Created
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-Unencrypted-Filesystem-Created"
           alarmDescription: Alarms when one or more API calls are made to create an Unencrypted filesystem (i.e. EFS) (in any account, any region of your AWS Organization).
           snsTopicName: SecurityHigh
           metricName: UnencryptedFilesystemCreatedCount
@@ -783,7 +871,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-IGNORE-AWS-Authorization-Failure
+        - alarmName: "{{ AcceleratorPrefix }}-IGNORE-AWS-Authorization-Failure"
           alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
           snsTopicName: SecurityIgnore
           metricName: IgnoreAuthorizationFailureCount
@@ -794,7 +882,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-IGNORE-AWS-Console-SignIn-Without-MFA
+        - alarmName: "{{ AcceleratorPrefix }}-IGNORE-AWS-Console-SignIn-Without-MFA"
           alarmDescription: Alarms when MFA is NOT used to sign into the console with IAM (in any account, any region of your AWS Organization).
           snsTopicName: SecurityIgnore
           metricName: IgnoreConsoleSignInWithoutMfaCount
@@ -805,7 +893,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-Console-SignIn-Failure
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-Console-SignIn-Failure"
           alarmDescription: Alarms when one or more unauthenticated API calls are made to sign into the console (in any account, any region of your AWS Organization).
           snsTopicName: SecurityHigh
           metricName: ConsoleSignInFailureCount
@@ -816,7 +904,7 @@ cloudWatch:
           statistic: Sum
           threshold: 3
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-Authorization-Failure
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-Authorization-Failure"
           alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
           snsTopicName: SecurityLow
           metricName: AuthorizationFailureCount
@@ -827,7 +915,7 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        - alarmName: AWSAccelerator-AWS-Root-Login
+        - alarmName: "{{ AcceleratorPrefix }}-AWS-Root-Login"
           alarmDescription: Alarms when the root user successfully logs in one or more times (in any account, any region of your AWS Organization).
           snsTopicName: SecurityHigh
           metricName: RootLoginEventCount

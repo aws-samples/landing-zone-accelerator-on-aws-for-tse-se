@@ -1,7 +1,9 @@
 homeRegion: &HOME_REGION ca-central-1
-configVersion: 1.6.1-a
+configVersion: 1.7.0-a
 enabledRegions:
   - *HOME_REGION
+  # It is recommended to enable additional regions once the initial installation is complete in the home region.
+  # See the post-deployment documentation for more information.
   # - "ap-northeast-1"
   # - "ap-northeast-2"
   # - "ap-northeast-3"
@@ -28,23 +30,33 @@ cdkOptions:
   forceBootstrap: true
 snsTopics:
   deploymentTargets:
-    organizationalUnits:
-      - Root
+    accounts:
+      - Management
+      - Audit
   topics:
     - name: SecurityHigh
       emailAddresses:
-        - <notify-high>@example.com # <----- UPDATE EMAIL ADDRESS
+        - "{{ SecurityHigh }}"
     - name: SecurityMedium
       emailAddresses:
-        - <notify-medium>@example.com # <----- UPDATE EMAIL ADDRESS
+        - "{{ SecurityMedium }}"
     - name: SecurityLow
       emailAddresses:
-        - <notify-low>@example.com # <----- UPDATE EMAIL ADDRESS
+        - "{{ SecurityLow }}"
     - name: SecurityIgnore
       emailAddresses:
-        - <notify-ignore>@example.com # <----- UPDATE EMAIL ADDRESS
+        - "{{ SecurityIgnore }}"
 controlTower:
   enable: false # UPDATE if using Control Tower, set to true
+  # UPDATE If using ControlTower, uncomment the following block and set the version to ControlTower latest available version
+  # landingZone:
+  #   version: '3.3'
+  #   logging:
+  #     loggingBucketRetentionDays: 365
+  #     accessLoggingBucketRetentionDays: 3650
+  #     organizationTrail: true
+  #   security:
+  #     enableIdentityCenterAccess: true
 logging:
   account: LogArchive
   cloudtrail:
@@ -62,7 +74,7 @@ logging:
     accountTrails:
       - name: AccountTrail
         regions:
-          - *HOME_REGION
+          - "{{ AcceleratorHomeRegion }}"
         deploymentTargets:
           accounts: []
           organizationalUnits: []
@@ -85,9 +97,66 @@ logging:
         noncurrentVersionExpiration: 730
     attachPolicyToIamRoles:
       - EC2-Default-SSM-AD-Role
-      - AWSAccelerator-RDGW-Role
+      - "{{ AcceleratorPrefix }}-RDGW-Role"
+    excludeRegions:
+      - ap-northeast-1
+      - ap-northeast-2
+      - ap-northeast-3
+      - ap-south-1
+      - ap-southeast-1
+      - ap-southeast-2
+      - eu-central-1
+      - eu-north-1
+      - eu-west-1
+      - eu-west-2
+      - eu-west-3
+      - sa-east-1
+      - us-east-1
+      - us-east-2
+      - us-west-1
+      - us-west-2
+    excludeAccounts:
+      - Management
+      - LogArchive
+      - Audit
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    exclusions:
+      - accounts:
+          - Management
+        logGroupNames:
+          - aws-accelerator-cloudtrail-logs
+    encryption:
+      useCMK: true
+      deploymentTargets:
+        organizationalUnits:
+          - Security
+          - Infrastructure
+          - Central
+          - Dev
+          - Test
+          - Prod
+          - UnClass
+          - Sandbox
+        accounts:
+          - Management
+        excludedRegions:
+          - ap-northeast-1
+          - ap-northeast-2
+          - ap-northeast-3
+          - ap-south-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - eu-central-1
+          - eu-north-1
+          - eu-west-1
+          - eu-west-2
+          - eu-west-3
+          - sa-east-1
+          - us-east-1
+          - us-east-2
+          - us-west-1
+          - us-west-2
   accessLogBucket:
     lifecycleRules:
       - enabled: true
@@ -106,6 +175,70 @@ logging:
         abortIncompleteMultipartUpload: 7
         expiration: 730
         noncurrentVersionExpiration: 730
+s3:
+  encryption:
+    createCMK: true
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - UnClass
+        - Sandbox
+      accounts:
+        - Management
+      excludedRegions:
+        - ap-northeast-1
+        - ap-northeast-2
+        - ap-northeast-3
+        - ap-south-1
+        - ap-southeast-1
+        - ap-southeast-2
+        - eu-central-1
+        - eu-north-1
+        - eu-west-1
+        - eu-west-2
+        - eu-west-3
+        - sa-east-1
+        - us-east-1
+        - us-east-2
+        - us-west-1
+        - us-west-2
+lambda:
+  encryption:
+    useCMK: true
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - UnClass
+        - Sandbox
+      accounts:
+        - Management
+      excludedRegions:
+        - ap-northeast-1
+        - ap-northeast-2
+        - ap-northeast-3
+        - ap-south-1
+        - ap-southeast-1
+        - ap-southeast-2
+        - eu-central-1
+        - eu-north-1
+        - eu-west-1
+        - eu-west-2
+        - eu-west-3
+        - sa-east-1
+        - us-east-1
+        - us-east-2
+        - us-west-1
+        - us-west-2
 ssmInventory:
   enable: true
   deploymentTargets:
@@ -162,25 +295,25 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
     - deploymentTargets:
         accounts:
           - Perimeter
@@ -206,31 +339,31 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
     - deploymentTargets:
         accounts:
           - Management
@@ -256,31 +389,31 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
     - deploymentTargets:
         organizationalUnits:
           - Security
@@ -313,31 +446,31 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com # <----- UPDATE EMAIL ADDRESS
+          address: "{{ BudgetEmail }}"
 limits:
   - serviceCode: vpc
     quotaCode: L-29B6F2EB

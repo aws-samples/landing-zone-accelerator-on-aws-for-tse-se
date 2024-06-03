@@ -28,9 +28,64 @@ For existing deployments, before making this change in your configuration and ru
 
 If you didn't previously used or enabled Identity Center, you need to enable it in your management account before running the LZA pipeline.
 
-**If you are already operating Identity Center from the Audit account with provisionned permission sets and assignements you should carefully review the impact of this change. Making this change can remove all existing Identity Center configurations**. To continue using the Audit Account as the delegated adminstrator for Identity Center you can use the following configuration instead:
+**If you are already operating Identity Center from the Audit account with provisionned permission sets and assignements you should carefully review the impact of this change. Making this change can remove all existing Identity Center configurations**. To continue using the Audit Account as the delegated administrator for Identity Center you can use the following configuration instead:
 ```
 identityCenter:
  name: OrgIdentityCenter
  delegatedAdminAccount: Audit
 ```
+
+## AWS Regions
+
+### What is the Home Region?
+
+The [homeRegion](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/v1.6.0/classes/_aws_accelerator_config.GlobalConfig.html#homeRegion) is where the accelerator pipeline is deployed and the region in which you will most often operate in. This reference architecture deploys the networking resources in that region by default.
+
+### What are Enabled Regions?
+[enabledRegions](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/v1.6.0/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions) is the list of regions where accelerator resources will be deployed. Home region must be part of this list.
+
+### Why should all regions be enabled in my configuration even if I don't intend to deploy workloads outside the Home Region?
+
+We highly recommend to add all AWS regions that are enabled by default to the list of `enabledRegions` in LZA to deploy all the guardrails and detective controls configured by this reference architecture. Service Control Policies are in place to prevent users to deploy resources outside of the home region, the deployment of detective controls in every region serves as a defense in depth measure. Multiple `excludeRegions:` statements are included in the reference configuration to avoid deploying unnecessary resources to all enabled regions and limit cost.
+
+### What if I want to deploy workloads in another region than the home region?
+
+The exact steps required to enable an additional region within the reference architecture may vary based on the type of workload and use of the region (e.g. used for disaster recovery only are as the main region for specific applications). The high-level steps are:
+
+1. Update the accelerator Service Control Policies to allow the use of the additional region. More precisely the `GBL1` and `GBL2` statements that denies the use of most services outside the Home Region.
+2. Remove the additional region from the `excludeRegions:` directives throughout the configuration files.
+3. Deploy the appropriate networking and other supporting resources in the additional region.
+
+### What about deploying workloads to an opt-in region?
+
+AWS Regions added after March 20, 2019 are disabled by default and need to be enabled before resources can be created in those regions. In addition to the steps from the previous section you will need to enable the opt-in region by following the steps in [Enable or disable a Region in your organization](https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-regions.html#manage-acct-regions-enable-organization)
+
+## Application Load Balancers Forwarding
+
+Since the `1.7.0-a` release of the configuration, Application Load Balancers are deployed in the Perimeter VPC. Sample configuration is also provided to automate the deployment of Application Load Balancers in workload accounts. AWS ALBs are published using DNS names which resolve to backing IPs which could silently change at any time due to a scaling event, maintenance, or a hardware failure. While published as a DNS name, ALBs can only target IP addresses. This presents a challenge as we need the ALBs in the perimeter account to target ALB's in the various back-end workload accounts.
+
+ALB Forwarding solves this problem by executing a small snippet of code every 60 seconds which updates managed ALB listeners with any IP changes, ensuring any managed flows do not go offline. This removes the requirement to leverage a 3rd party appliance to perform NAT to a DNS name.
+
+See the [post-deployment](../post-deployment.md) instructions for more details on how to configure the ALB forwarding rules
+
+### Why was a target group not created for an ALB Forwarding entry?
+
+When an entry is added to the ALB Forwarding table, a lookup is performed to validate and configure the target group. Additional information is then inserted to the DynamoDB table, specifically to the newly added entry with the key `metadata`. If this `metadata` key is not added and populated and/or a target group is not added, this could indicate an error in the parameters provided for the entry.
+
+To troubleshoot ALB Forwarding target group creation, consult the CloudWatch logs for the ALB Forwarding Lambda functions. The CloudWatch Log Groups are named `<AcceleratorPrefix>-AlbIPForwa-*`. If necessary, remove the affected entry from the DynamoDB table and re-add, ensuring that any information provided is correct.
+
+### Why can I not reach resources behind my workload ALB through the external ALB?
+
+The reachability of resources in workload accounts relies on several factors:
+
+1. The ALB targets in the workload account are healthy.
+
+Since the external ALB in the Perimeter account relies on health checks against the internal ALB in workload accounts, verify that the targets attached to the workload internal ALB are healthy.
+
+2. Routing from the Perimeter ALBs to the workload ALBs, and return traffic, through the Transit Gateway.
+
+Verify that the Transit Gateway is configured in the Landing Zone Accelerator to route traffic between the Perimeter and workload VPCs, and that the corresponding Transit Gateway attachments are present in the Network account.
+
+3. Network security configuration permitting the required traffic to the workload ALBs and resources.
+
+Verify that any Network ACLs (NACLS) and security groups are configured to permit the required traffic from the ALB Forwarding resources in the Perimeter account.

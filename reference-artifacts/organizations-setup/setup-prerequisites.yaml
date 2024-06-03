@@ -47,7 +47,7 @@ Resources:
     Properties:
       AccountName: Audit
       Email: !Ref SecurityAccountEmail
-      ParentIds: 
+      ParentIds:
         - !Ref SecurityOU
       RoleName: OrganizationAccountAccessRole
 
@@ -57,7 +57,7 @@ Resources:
     Properties:
       AccountName: LogArchive
       Email: !Ref LogArchiveAccountEmail
-      ParentIds: 
+      ParentIds:
         - !Ref SecurityOU
       RoleName: OrganizationAccountAccessRole
 
@@ -67,7 +67,7 @@ Resources:
   #   Properties:
   #     AccountName: LandingZoneDeployment
   #     Email: !Ref LandingZoneDeploymentAccountEmail
-  #     ParentIds: 
+  #     ParentIds:
   #       - !Ref LandingZoneDeploymentOU
   #     RoleName: OrganizationAccountAccessRole
 
@@ -75,10 +75,10 @@ Outputs:
   OrgId:
     Description: Organisation ID
     Value: !Ref AWSOrganization
-    Export: 
+    Export:
       Name: OrgId
   OrgRootId:
     Description: Organisation ID
     Value: !GetAtt AWSOrganization.RootId
-    Export: 
+    Export:
       Name: OrgRootId

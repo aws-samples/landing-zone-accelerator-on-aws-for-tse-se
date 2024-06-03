@@ -1,0 +1,17 @@
+customizations:
+  cloudFormationStacks:
+    - name: AWSAccelerator-AlbIPForwardingStack
+      description: ALB Lambda Forwarder
+      runOrder: 10
+      template: customizations/AlbIpForwardingStack.template.json
+      terminationProtection: true
+      parameters:
+        - name: acceleratorPrefix
+          value: AWSAccelerator
+        - name: vpcName
+          value: Perimeter
+      deploymentTargets:
+        accounts:
+          - Perimeter
+      regions:
+        - ca-central-1
