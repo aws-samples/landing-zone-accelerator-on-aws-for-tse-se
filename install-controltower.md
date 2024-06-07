@@ -1,8 +1,6 @@
 
 # 2. Deploy Landing Zone Accelerator using AWS Control Tower
 
-_Note: Government of Canada customers are required to skip this step and [deploy using AWS Organizations](install-organizations.md) and NOT Control Tower._
-
 ## 2.1 Configure AWS Control Tower
 
 Starting with version v1.7.0 of Landing Zone Accelerator, Control Tower can be setup as part of the LZA installation by setting the appropriate parameters when deploying the CloudFormation stack in the next step.
