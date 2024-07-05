@@ -1,0 +1,6 @@
+{
+"bucket": "${ACCEL_LOOKUP::S3:BUCKET:firewall-config}",
+"region": "ca-central-1",
+"license": "fortinet/FGVMxxxx.lic",
+"config": "fortinet/lza-fortigate-2.conf"
+}

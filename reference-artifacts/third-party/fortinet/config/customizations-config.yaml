@@ -1,0 +1,180 @@
+firewalls:
+  instances:
+    - name: accelerator-firewall-1
+      licenseFile: fortinet/FGVMxxxx.lic # UPDATE WITH YOUR LICENSE FILE NAME
+      configFile: fortinet/lza-fortigate.conf
+      staticReplacements:
+        - key: CORP_CIDR_1
+          value: {{ AwsRangeCidr }}
+      terminationProtection: true
+      launchTemplate:
+        name: firewall-lt
+        blockDeviceMappings:
+          - deviceName: /dev/sda1
+            ebs:
+              deleteOnTermination: true
+              encrypted: true
+          - deviceName: /dev/sdb
+            ebs:
+              deleteOnTermination: true
+              encrypted: true
+        securityGroups: []
+        enforceImdsv2: true
+        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
+        instanceType: c5n.xlarge
+        networkInterfaces:
+          - deleteOnTermination: true
+            description: VPN interface
+            associateElasticIp: true
+            deviceIndex: 0
+            sourceDestCheck: false
+            groups:
+              - Firewalls_sg
+            subnetId: PerimeterNat-A
+          - deleteOnTermination: true
+            description: Private interface
+            associateElasticIp: false
+            deviceIndex: 1
+            sourceDestCheck: false
+            groups:
+              - Firewalls_sg
+            subnetId: PerimeterTgwAttach-A
+          - deleteOnTermination: true
+            description: Admin interface
+            associateElasticIp: false
+            deviceIndex: 2
+            sourceDestCheck: false
+            groups:
+              - Firewalls_sg
+            subnetId: Perimeter-A
+        userData: userdata/fw1.txt
+      vpc: Perimeter
+    - name: accelerator-firewall-2
+      licenseFile: fortinet/FGVMxxxx.lic # UPDATE WITH YOUR LICENSE FILE NAME
+      configFile: fortinet/lza-fortigate-2.conf
+      staticReplacements:
+        - key: CORP_CIDR_1
+          value: {{ AwsRangeCidr }}
+      terminationProtection: true
+      launchTemplate:
+        name: firewall-lt-2
+        blockDeviceMappings:
+          - deviceName: /dev/sda1
+            ebs:
+              deleteOnTermination: true
+              encrypted: true
+          - deviceName: /dev/sdb
+            ebs:
+              deleteOnTermination: true
+              encrypted: true
+        securityGroups: []
+        enforceImdsv2: true
+        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
+        instanceType: c5n.xlarge
+        networkInterfaces:
+          - deleteOnTermination: true
+            description: VPN interface
+            associateElasticIp: true
+            deviceIndex: 0
+            sourceDestCheck: false
+            groups:
+              - Firewalls_sg
+            subnetId: PerimeterNat-B
+          - deleteOnTermination: true
+            description: Private interface
+            associateElasticIp: false
+            deviceIndex: 1
+            sourceDestCheck: false
+            groups:
+              - Firewalls_sg
+            subnetId: PerimeterTgwAttach-B
+          - deleteOnTermination: true
+            description: Admin interface
+            associateElasticIp: false
+            deviceIndex: 2
+            sourceDestCheck: false
+            groups:
+              - Firewalls_sg
+            subnetId: Perimeter-B
+        userData: userdata/fw2.txt
+      vpc: Perimeter
+applications:
+  - name: rsyslog
+    vpc: Central
+    deploymentTargets:
+      accounts:
+        - Operations
+      excludedRegions:
+        - us-west-2
+        - ap-northeast-1
+        - ap-northeast-2
+        - ap-northeast-3
+        - ap-south-1
+        - ap-southeast-1
+        - ap-southeast-2
+        - eu-central-1
+        - eu-north-1
+        - eu-west-1
+        - eu-west-2
+        - eu-west-3
+        - sa-east-1
+        - us-east-1
+        - us-east-2
+        - us-west-1
+        - us-west-2
+    autoscaling:
+      name: rsyslog-asg
+      maxSize: 4
+      minSize: 1
+      desiredSize: 1
+      launchTemplate: rsyslog-lt
+      healthCheckGracePeriod: 300
+      healthCheckType: ELB # EC2|ELB
+      targetGroups:
+        - rsyslog-nlb-tg-1
+      subnets:
+        - Central-App-A
+        - Central-App-B
+    launchTemplate:
+      name: rsyslog-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            volumeSize: 100
+      securityGroups:
+        # security group is from network-config.yaml under the same vpc
+        - Operations-Rsyslog-sg
+        - Management
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: AWSAccelerator-Rsyslog-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.large
+      userData: userdata/userData-rsyslog.sh
+    targetGroups:
+      - name: rsyslog-nlb-tg-1
+        port: 514
+        protocol: TCP_UDP
+        type: instance
+        attributes:
+          connectionTermination: false
+          preserveClientIp: true
+          proxyProtocolV2: false
+    networkLoadBalancer:
+      name: rsyslog-nlb
+      scheme: internal
+      deletionProtection: true
+      subnets:
+        # subnets are from network-config.yaml under the same vpc
+        - Central-Web-A
+        - Central-Web-B
+      crossZoneLoadBalancing: false
+      listeners:
+        - name: rsyslog-listener-1
+          port: 514
+          protocol: TCP_UDP
+          targetGroup: rsyslog-nlb-tg-1

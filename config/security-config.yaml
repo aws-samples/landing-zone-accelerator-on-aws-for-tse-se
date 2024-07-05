@@ -926,6 +926,13 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-
+  logGroups:
+    - logGroupName: /AWSAccelerator/rsyslog
+      logRetentionInDays: 731
+      encryption:
+        useLzaManagedKey: true
+      deploymentTargets:
+        accounts:
+          - Operations
 keyManagementService:
   keySets: []

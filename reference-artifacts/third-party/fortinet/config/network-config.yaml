@@ -1,0 +1,1880 @@
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+transitGateways:
+  - name: Network-Main
+    account: Network
+    region: {{ AcceleratorHomeRegion }}
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-Core
+        routes: []
+      - name: Network-Main-Segregated
+        routes:
+          - destinationCidrBlock: {{ VpcDevCidr }}
+            blackhole: true
+          - destinationCidrBlock: {{ VpcTestCidr }}
+            blackhole: true
+          - destinationCidrBlock: {{ VpcProdCidr }}
+            blackhole: true
+      - name: Network-Main-Shared
+        routes: []
+      - name: Network-Main-Standalone
+        routes: []
+centralNetworkServices:
+  delegatedAdminAccount: Network
+  ipams:
+    - name: accelerator-ipam
+      region: {{ AcceleratorHomeRegion }}
+      description: Accelerator IPAM
+      operatingRegions:
+        - {{ AcceleratorHomeRegion }}
+      pools:
+        - name: home-region-sandbox-pool
+          description: Pool for sandbox environment
+          locale: {{ AcceleratorHomeRegion }}
+          provisionedCidrs:
+            - 10.0.0.0/8
+          shareTargets:
+            organizationalUnits:
+              - Sandbox
+  route53Resolver:
+    endpoints:
+      - name: EndpointOutbound
+        type: OUTBOUND
+        vpc: Endpoint
+        allowedCidrs:
+          - {{ AwsRangeCidr }}
+        subnets:
+          - Endpoint-A
+          - Endpoint-B
+        rules:
+          - name: "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+            domainName: {{ MadDnsName }}
+            targetIps:
+              - ip: 1.1.1.1
+              # port: '5353' # only include if targeting a non-standard DNS port
+              - ip: 2.2.2.2
+            shareTargets:
+              accounts:
+                - Operations
+    queryLogs:
+      name: accelerator-query-logs
+      destinations:
+        - s3
+        - cloud-watch-logs
+      shareTargets:
+        organizationalUnits:
+          - Infrastructure
+    firewallRuleGroups:
+      - name: accelerator-block-group
+        regions:
+          - {{ AcceleratorHomeRegion }}
+        rules:
+          - name: managed-rule
+            action: BLOCK
+            managedDomainList: AWSManagedDomainsBotnetCommandandControl
+            priority: 300
+            blockResponse: NODATA
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+prefixLists:
+  - name: onpremises-prefix-list
+    deploymentTargets:
+      organizationalUnits:
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - Infrastructure
+    addressFamily: "IPv4"
+    maxEntries: 1
+    entries:
+      - 10.1.0.1/32
+###################################################################################
+# Self signed certificates are deployed as an example.                            #
+# Replace by your own certificate or request them with Amazon Certificate Manager #
+###################################################################################
+certificates:
+  - name: PerimSelf-SignedCert
+    type: import
+    privKey: certs/example1-cert.key
+    cert: certs/example1-cert.crt
+    deploymentTargets:
+      accounts:
+        - Perimeter
+  - name: DevSelf-SignedCert
+    type: import
+    privKey: certs/example1-cert.key
+    cert: certs/example1-cert.crt
+    deploymentTargets:
+      organizationalUnits:
+        - Dev
+      accounts:
+        - Network
+###################################################################################
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+customerGateways:
+  - name: accelerator-tunnel1
+    account: Network
+    region: *HOME_REGION
+    ipAddress: ${ACCEL_LOOKUP::EC2:ENI_0:accelerator-firewall-1}
+    asn: 65499
+    vpnConnections:
+      - name: accelerator-tunnel-1
+        transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Segregated
+          - Network-Main-Shared
+        staticRoutesOnly: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.200.0/30
+          - tunnelInsideCidr: 169.254.200.100/30
+  - name: accelerator-tunnel2
+    account: Network
+    region: *HOME_REGION
+    ipAddress: ${ACCEL_LOOKUP::EC2:ENI_0:accelerator-firewall-2}
+    asn: 65499
+    vpnConnections:
+      - name: accelerator-tunnel-2
+        transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Segregated
+          - Network-Main-Shared
+        staticRoutesOnly: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.200.0/30
+          - tunnelInsideCidr: 169.254.200.100/30
+vpcs:
+  - name: Endpoint
+    tags:
+      - key: Name
+        value: Endpoint
+    account: Network
+    region: {{ AcceleratorHomeRegion }}
+    cidrs:
+      - {{ VpcEndpointCidr }}
+    defaultSecurityGroupRulesDeletion: true
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    queryLogs:
+      - accelerator-query-logs
+    routeTables:
+      - name: Endpoint
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    subnets:
+      - name: Endpoint-A
+        availabilityZone: a
+        routeTable: Endpoint
+        ipv4CidrBlock: 10.7.0.0/24
+      - name: Endpoint-B
+        availabilityZone: b
+        routeTable: Endpoint
+        ipv4CidrBlock: 10.7.1.0/24
+      - name: EndpointTgwAttach-A
+        availabilityZone: a
+        routeTable: Endpoint
+        ipv4CidrBlock: 10.7.3.208/28
+      - name: EndpointTgwAttach-B
+        availabilityZone: b
+        routeTable: Endpoint
+        ipv4CidrBlock: 10.7.3.224/28
+    transitGatewayAttachments:
+      - name: Endpoint
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Segregated
+          - Network-Main-Shared
+          - Network-Main-Standalone
+        subnets:
+          - EndpointTgwAttach-A
+          - EndpointTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    interfaceEndpoints:
+      central: true
+      defaultPolicy: Default
+      subnets:
+        - Endpoint-A
+        - Endpoint-B
+      endpoints:
+        - service: ec2
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: kms
+        - service: logs
+        - service: cloudformation
+        - service: secretsmanager
+        - service: monitoring
+        # - service: access-analyzer
+        # - service: acm-pca
+        # - service: application-autoscaling
+        # - service: appmesh-envoy-management
+        # - service: athena
+        # - service: autoscaling
+        # - service: autoscaling-plans
+        # - service: awsconnector
+        # - service: cassandra
+        # - service: clouddirectory
+        # - service: cloudtrail
+        # - service: codebuild
+        # - service: codecommit
+        # - service: codepipeline
+        # - service: config
+        # - service: datasync
+        # - service: ebs
+        # - service: ecr.api
+        # - service: ecr.dkr
+        # - service: ecs
+        # - service: ecs-agent
+        # - service: ecs-telemetry
+        # - service: elasticbeanstalk
+        # - service: elasticbeanstalk-health
+        # - service: elasticfilesystem
+        # - service: elasticloadbalancing
+        # - service: elasticmapreduce
+        # - service: email-smtp
+        # - service: events
+        # - service: execute-api
+        # - service: git-codecommit
+        # - service: glue
+        # - service: kinesis-firehose
+        # - service: kinesis-streams
+        # - service: license-manager
+        # - service: macie2
+        # - service: notebook
+        # - service: sagemaker.api
+        # - service: sagemaker.runtime
+        # - service: servicecatalog
+        # - service: sms
+        # - service: sns
+        # - service: sqs
+        # - service: states
+        # - service: storagegateway
+        # - service: sts
+        # - service: synthetics
+        # - service: transfer
+        # - service: transfer.server
+        # - service: workspaces
+    resolverRules:
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+  - name: Perimeter
+    tags:
+      - key: Name
+        value: Perimeter
+    account: Perimeter
+    region: {{ AcceleratorHomeRegion }}
+    cidrs:
+      - {{ VpcPerimeterCidr }}
+    defaultSecurityGroupRulesDeletion: true
+    securityGroups:
+      - name: "Public-Prod-ALB"
+        description: "Perimeter ALB Security Group for prod"
+        inboundRules:
+          - description: "HTTPS Traffic Inbound"
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Public-DevTest-ALB"
+        description: "Perimeter ALB Security Group for dev-test"
+        inboundRules:
+          - description: "HTTPS Traffic Inbound"
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Firewalls_sg"
+        description: "FortiGate Firewalls Security Group"
+        inboundRules:
+          - description: "All Allowed Inbound Traffic"
+            types:
+              - HTTPS
+            sources:
+              - 10.1.1.1/32 # UPDATE with IP allowed to manage firewall
+          - description: "Mgmt Traffic, Customer Outbound traffic and ALBs"
+            types:
+              - ALL
+            sources:
+              - {{ AwsRangeCidr }}
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    internetGateway: true
+    routeTables:
+      - name: Perimeter-Tgw-A
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: local
+            targetAvailabilityZone: a
+      - name: Perimeter-Tgw-B
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: local
+            targetAvailabilityZone: b
+      - name: Perimeter-A
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Perimeter-A
+            # Once the FortiGate instances are deployed and licence validated, the NAT Gateway can be removed and the target of this route updated
+            # type: networkInterface
+            # target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall-1}
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: Applications
+            destination: {{ AwsRangeCidr }}
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall-1}
+      - name: Perimeter-B
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Perimeter-B
+            # Once the FortiGate instances are deployed and licence validated, the NAT Gateway can be removed and the target of this route updated
+            # type: networkInterface
+            # target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall-2}
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: Applications
+            destination: {{ AwsRangeCidr }}
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall-2}
+      - name: Perimeter-Nat-A
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Perimeter-Nat-B
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    subnets:
+      - name: Perimeter-A
+        availabilityZone: a
+        routeTable: Perimeter-A
+        ipv4CidrBlock: 10.7.4.0/24
+      - name: Perimeter-B
+        availabilityZone: b
+        routeTable: Perimeter-B
+        ipv4CidrBlock: 10.7.5.0/24
+      - name: PerimeterTgwAttach-A
+        availabilityZone: a
+        routeTable: Perimeter-Tgw-A
+        ipv4CidrBlock: 10.7.7.208/28
+      - name: PerimeterTgwAttach-B
+        availabilityZone: b
+        routeTable: Perimeter-Tgw-B
+        ipv4CidrBlock: 10.7.7.224/28
+      - name: PerimeterNat-A
+        availabilityZone: a
+        routeTable: Perimeter-Nat-A
+        ipv4CidrBlock: 10.7.7.176/28
+      - name: PerimeterNat-B
+        availabilityZone: b
+        routeTable: Perimeter-Nat-B
+        ipv4CidrBlock: 10.7.7.192/28
+    natGateways:
+    # Once the Fortigate instances are deployed and licence validated, the NAT Gateway can be removed
+      - name: Nat-Perimeter-A
+        subnet: PerimeterNat-A
+      - name: Nat-Perimeter-B
+        subnet: PerimeterNat-B
+    transitGatewayAttachments: []
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: Public-Prod
+          scheme: internet-facing
+          subnets:
+            - PerimeterNat-A
+            - PerimeterNat-B
+          securityGroups:
+            - Public-Prod-ALB
+          listeners:
+            - name: alb-listener
+              port: 443
+              protocol: HTTPS
+              targetGroup: Public-Prod-tg
+              type: forward
+              certificate: PerimSelf-SignedCert
+              sslPolicy: ELBSecurityPolicy-FS-1-2-Res-2019-08
+        - name: Public-DevTest
+          scheme: internet-facing
+          subnets:
+            - PerimeterNat-A
+            - PerimeterNat-B
+          securityGroups:
+            - Public-DevTest-ALB
+          listeners:
+            - name: alb-listener
+              port: 443
+              protocol: HTTPS
+              targetGroup: Public-DevTest-tg
+              type: forward
+              certificate: PerimSelf-SignedCert
+              sslPolicy: ELBSecurityPolicy-FS-1-2-Res-2019-08
+    targetGroups:
+      - name: Public-Prod-tg
+        port: 443
+        protocol: HTTPS
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+      - name: Public-DevTest-tg
+        port: 443
+        protocol: HTTPS
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+  - name: Dev
+    tags:
+      - key: Name
+        value: Dev
+    account: Network
+    region: {{ AcceleratorHomeRegion }}
+    cidrs:
+      - {{ VpcDevCidr }}
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: Dev
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+
+    networkAcls:
+      - name: PermitDataTierFromAppTier
+        subnetAssociations:
+          - Dev-Data-A
+          - Dev-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Dev
+              subnet: Dev-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Dev
+              subnet: Dev-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+
+    subnets:
+      - name: Dev-Web-A
+        tags:
+          - key: Name
+            value: Dev-Web-A
+        availabilityZone: a
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.16.0/20
+        shareTargets:
+          organizationalUnits:
+            - Dev
+      - name: Dev-Web-B
+        tags:
+          - key: Name
+            value: Dev-Web-B
+        availabilityZone: b
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.32.0/20
+        shareTargets:
+          organizationalUnits:
+            - Dev
+      - name: Dev-App-A
+        tags:
+          - key: Name
+            value: Dev-App-A
+        availabilityZone: a
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - Dev
+      - name: Dev-App-B
+        tags:
+          - key: Name
+            value: Dev-App-B
+        availabilityZone: b
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - Dev
+      - name: Dev-Data-A
+        tags:
+          - key: Name
+            value: Dev-Data-A
+        availabilityZone: a
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - Dev
+      - name: Dev-Data-B
+        tags:
+          - key: Name
+            value: Dev-Data-B
+        availabilityZone: b
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - Dev
+      - name: Dev-MainTgwAttach-A
+        tags:
+          - key: Name
+            value: Dev-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.0.0/27
+      - name: Dev-MainTgwAttach-B
+        tags:
+          - key: Name
+            value: Dev-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.0.32/27
+      - name: Dev-Mgmt-A
+        tags:
+          - key: Name
+            value: Dev-Mgmt-A
+        availabilityZone: a
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.8.0/21
+      - name: Dev-Mgmt-B
+        tags:
+          - key: Name
+            value: Dev-Mgmt-B
+        availabilityZone: b
+        routeTable: Dev
+        ipv4CidrBlock: 10.2.208.0/21
+    securityGroups:
+      - name: "Management"
+        description: "Management Security Group"
+        inboundRules:
+          - description: "Management RDP/SSH Traffic Inbound"
+            types:
+              - RDP
+              - SSH
+            sources:
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Dev VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Dev VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Dev VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                  - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Data
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    transitGatewayAttachments:
+      - name: Dev-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Segregated
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+        subnets:
+          - Dev-MainTgwAttach-A
+          - Dev-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    resolverRules:
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+  - name: Central
+    tags:
+      - key: Name
+        value: Central
+    account: Network
+    region: {{ AcceleratorHomeRegion }}
+    cidrs:
+      - {{ VpcCentralCidr }}
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: Central
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    securityGroups:
+      - name: "Operations-Rsyslog-sg"
+        description: "Security Group for rsyslog instances"
+        inboundRules:
+          - description: "Rsyslog trafic"
+            tcpPorts:
+              - 514
+            udpPorts:
+              - 514
+            sources:
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - onpremises-prefix-list
+              - account: Perimeter
+                vpc: Perimeter
+                subnets:
+                  - Perimeter-A
+                  - Perimeter-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Management"
+        description: "Management Security Group"
+        inboundRules:
+          - description: "Management RDP/SSH Traffic Inbound"
+            types:
+              - RDP
+              - SSH
+            sources:
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Central VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Central VPC"
+        inboundRules:
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Central VPC"
+        inboundRules:
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                  - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Data
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    networkAcls:
+      - name: PermitDataTierFromAppTier
+        subnetAssociations:
+          - Central-Data-A
+          - Central-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Central
+              subnet: Central-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Central
+              subnet: Central-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+    subnets:
+      - name: Central-Web-A
+        tags:
+          - key: Name
+            value: Central-Web-A
+        availabilityZone: a
+        routeTable: Central
+        ipv4CidrBlock: 10.1.16.0/20
+        shareTargets:
+          organizationalUnits:
+            - Central
+          accounts:
+            - Operations
+      - name: Central-Web-B
+        tags:
+          - key: Name
+            value: Central-Web-B
+        availabilityZone: b
+        routeTable: Central
+        ipv4CidrBlock: 10.1.32.0/20
+        shareTargets:
+          organizationalUnits:
+            - Central
+          accounts:
+            - Operations
+      - name: Central-App-A
+        tags:
+          - key: Name
+            value: Central-App-A
+        availabilityZone: a
+        routeTable: Central
+        ipv4CidrBlock: 10.1.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - Central
+          accounts:
+            - Operations
+      - name: Central-App-B
+        tags:
+          - key: Name
+            value: Central-App-B
+        availabilityZone: b
+        routeTable: Central
+        ipv4CidrBlock: 10.1.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - Central
+          accounts:
+            - Operations
+      - name: Central-Data-A
+        tags:
+          - key: Name
+            value: Central-Data-A
+        availabilityZone: a
+        routeTable: Central
+        ipv4CidrBlock: 10.1.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - Central
+          accounts:
+            - Operations
+      - name: Central-Data-B
+        tags:
+          - key: Name
+            value: Central-Data-B
+        availabilityZone: b
+        routeTable: Central
+        ipv4CidrBlock: 10.1.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - Central
+          accounts:
+            - Operations
+      - name: Central-MainTgwAttach-A
+        tags:
+          - key: Name
+            value: Central-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: Central
+        ipv4CidrBlock: 10.1.0.0/27
+      - name: Central-MainTgwAttach-B
+        tags:
+          - key: Name
+            value: Central-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: Central
+        ipv4CidrBlock: 10.1.0.32/27
+      - name: Central-Mgmt-A
+        tags:
+          - key: Name
+            value: Central-Mgmt-A
+        availabilityZone: a
+        routeTable: Central
+        ipv4CidrBlock: 10.1.8.0/21
+      - name: Central-Mgmt-B
+        tags:
+          - key: Name
+            value: Central-Mgmt-B
+        availabilityZone: b
+        routeTable: Central
+        ipv4CidrBlock: 10.1.208.0/21
+    transitGatewayAttachments:
+      - name: Central-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Segregated
+          - Network-Main-Shared
+        subnets:
+          - Central-MainTgwAttach-A
+          - Central-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    resolverRules:
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+  - name: Test
+    tags:
+      - key: Name
+        value: Test
+    account: Network
+    region: {{ AcceleratorHomeRegion }}
+    cidrs:
+      - {{ VpcTestCidr }}
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: Test
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    networkAcls:
+      - name: PermitDataTierFromAppTier
+        subnetAssociations:
+          - Test-Data-A
+          - Test-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Test
+              subnet: Test-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Test
+              subnet: Test-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+    subnets:
+      - name: Test-Web-A
+        tags:
+          - key: Name
+            value: Test-Web-A
+        availabilityZone: a
+        routeTable: Test
+        ipv4CidrBlock: 10.3.16.0/20
+        shareTargets:
+          organizationalUnits:
+            - Test
+      - name: Test-Web-B
+        tags:
+          - key: Name
+            value: Test-Web-B
+        availabilityZone: b
+        routeTable: Test
+        ipv4CidrBlock: 10.3.32.0/20
+        shareTargets:
+          organizationalUnits:
+            - Test
+      - name: Test-App-A
+        tags:
+          - key: Name
+            value: Test-App-A
+        availabilityZone: a
+        routeTable: Test
+        ipv4CidrBlock: 10.3.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - Test
+      - name: Test-App-B
+        tags:
+          - key: Name
+            value: Test-App-B
+        availabilityZone: b
+        routeTable: Test
+        ipv4CidrBlock: 10.3.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - Test
+      - name: Test-Data-A
+        tags:
+          - key: Name
+            value: Test-Data-A
+        availabilityZone: a
+        routeTable: Test
+        ipv4CidrBlock: 10.3.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - Test
+      - name: Test-Data-B
+        tags:
+          - key: Name
+            value: Test-Data-B
+        availabilityZone: b
+        routeTable: Test
+        ipv4CidrBlock: 10.3.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - Test
+      - name: Test-MainTgwAttach-A
+        tags:
+          - key: Name
+            value: Test-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: Test
+        ipv4CidrBlock: 10.3.0.0/27
+      - name: Test-MainTgwAttach-B
+        tags:
+          - key: Name
+            value: Test-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: Test
+        ipv4CidrBlock: 10.3.0.32/27
+      - name: Test-Mgmt-A
+        tags:
+          - key: Name
+            value: Test-Mgmt-A
+        availabilityZone: a
+        routeTable: Test
+        ipv4CidrBlock: 10.3.8.0/21
+      - name: Test-Mgmt-B
+        tags:
+          - key: Name
+            value: Test-Mgmt-B
+        availabilityZone: b
+        routeTable: Test
+        ipv4CidrBlock: 10.3.208.0/21
+    securityGroups:
+      - name: "Management"
+        description: "Management Security Group"
+        inboundRules:
+          - description: "Management RDP/SSH Traffic Inbound"
+            types:
+              - RDP
+              - SSH
+            sources:
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Test VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Test VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Test VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                  - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Data
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    transitGatewayAttachments:
+      - name: Test-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Segregated
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+        subnets:
+          - Test-MainTgwAttach-A
+          - Test-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    resolverRules:
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+  - name: Prod
+    tags:
+      - key: Name
+        value: Prod
+    account: Network
+    region: {{ AcceleratorHomeRegion }}
+    cidrs:
+      - {{ VpcProdCidr }}
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: Prod
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    networkAcls:
+      - name: PermitDataTierFromAppTier
+        subnetAssociations:
+          - Prod-Data-A
+          - Prod-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Prod
+              subnet: Prod-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Prod
+              subnet: Prod-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+    subnets:
+      - name: Prod-Web-A
+        tags:
+          - key: Name
+            value: Prod-Web-A
+        availabilityZone: a
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.16.0/20
+        shareTargets:
+          organizationalUnits:
+            - Prod
+      - name: Prod-Web-B
+        tags:
+          - key: Name
+            value: Prod-Web-B
+        availabilityZone: b
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.32.0/20
+        shareTargets:
+          organizationalUnits:
+            - Prod
+      - name: Prod-App-A
+        tags:
+          - key: Name
+            value: Prod-App-A
+        availabilityZone: a
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - Prod
+      - name: Prod-App-B
+        tags:
+          - key: Name
+            value: Prod-App-B
+        availabilityZone: b
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - Prod
+      - name: Prod-Data-A
+        tags:
+          - key: Name
+            value: Prod-Data-A
+        availabilityZone: a
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - Prod
+      - name: Prod-Data-B
+        tags:
+          - key: Name
+            value: Prod-Data-B
+        availabilityZone: b
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - Prod
+      - name: Prod-MainTgwAttach-A
+        tags:
+          - key: Name
+            value: Prod-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.0.0/27
+      - name: Prod-MainTgwAttach-B
+        tags:
+          - key: Name
+            value: Prod-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.0.32/27
+      - name: Prod-Mgmt-A
+        tags:
+          - key: Name
+            value: Prod-Mgmt-A
+        availabilityZone: a
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.8.0/21
+      - name: Prod-Mgmt-B
+        tags:
+          - key: Name
+            value: Prod-Mgmt-B
+        availabilityZone: b
+        routeTable: Prod
+        ipv4CidrBlock: 10.4.208.0/21
+    securityGroups:
+      - name: "Management"
+        description: "Management Security Group"
+        inboundRules:
+          - description: "Management RDP/SSH Traffic Inbound"
+            types:
+              - RDP
+              - SSH
+            sources:
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Prod VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Prod VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Prod VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-B
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                  - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - Data
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    transitGatewayAttachments:
+      - name: Prod-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Segregated
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+        subnets:
+          - Prod-MainTgwAttach-A
+          - Prod-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    resolverRules:
+      - "{{ AcceleratorPrefix }}-Endpoint-mad-example-local"
+vpcTemplates:
+  - name: Sandbox-Template
+    region: {{ AcceleratorHomeRegion }}
+    deploymentTargets:
+      organizationalUnits:
+        - Sandbox
+    ipamAllocations:
+      - ipamPoolName: home-region-sandbox-pool
+        netmaskLength: 20
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-Sandbox-A
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-A
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Sandbox-B
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-B
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Sandbox-Nat-A
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Network-Sandbox-Nat-B
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    subnets:
+      - name: Network-Sandbox-A
+        availabilityZone: a
+        routeTable: Network-Sandbox-A
+        ipamAllocation:
+          ipamPoolName: home-region-sandbox-pool
+          netmaskLength: 24
+      - name: Network-Sandbox-B
+        availabilityZone: b
+        routeTable: Network-Sandbox-B
+        ipamAllocation:
+          ipamPoolName: home-region-sandbox-pool
+          netmaskLength: 24
+      - name: Network-SandboxNat-A
+        availabilityZone: a
+        routeTable: Network-Sandbox-Nat-A
+        ipamAllocation:
+          ipamPoolName: home-region-sandbox-pool
+          netmaskLength: 28
+      - name: Network-SandboxNat-B
+        availabilityZone: b
+        routeTable: Network-Sandbox-Nat-B
+        ipamAllocation:
+          ipamPoolName: home-region-sandbox-pool
+          netmaskLength: 28
+    natGateways:
+      - name: Nat-Network-Sandbox-A
+        subnet: Network-SandboxNat-A
+      - name: Nat-Network-Sandbox-B
+        subnet: Network-SandboxNat-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - cloud-watch-logs
+    - s3
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 30
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path

@@ -5,8 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.8.1-a] 2024-07-05
+## [1.8.1-b] 2024-07-05
+### Added
+- feat(networking): Added instructions and sample configurations to use Fortinet in the Perimeter VPC instead of AWS Network Firewall. You can ignore those changes if you are not planning to adopt third-party Firewalls.
 
+## [1.8.1-a] 2024-07-05
 ### Changed
 - fix(network-config): Removed invalid target group attributes definition
 - fix(security): Exclude GUARDDUTY_NON_ARCHIVED_FINDINGS config rule from ca-west-1 until it becomes available

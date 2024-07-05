@@ -1,5 +1,5 @@
 homeRegion: &HOME_REGION ca-central-1
-configVersion: 1.8.1-a
+configVersion: 1.8.1-b
 enabledRegions:
   - *HOME_REGION
   # It is recommended to enable additional regions once the initial installation is complete in the home region.
@@ -98,6 +98,7 @@ logging:
     attachPolicyToIamRoles:
       - EC2-Default-SSM-AD-Role
       - "{{ AcceleratorPrefix }}-RDGW-Role"
+      - "{{ AcceleratorPrefix }}-Rsyslog-Role"
     excludeRegions:
       - ap-northeast-1
       - ap-northeast-2
