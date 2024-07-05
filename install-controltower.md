@@ -7,6 +7,8 @@ Starting with version v1.7.0 of Landing Zone Accelerator, Control Tower can be s
 
 You first need to [enable AWS Organizations in your home Region](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html) by going to the [AWS Organizations console](https://console.aws.amazon.com/organizations/v2) and choosing **Create an organization**.
 
+Note: Leave the Control Tower _Region deny setting_ set to **Not enabled** - the Accelerator needs a customized region deny policy.
+
 ## 2.2 Deploy the installer CloudFormation stack
 Click the **Launch Solution** button on [Step 1. Launch the stack](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html) page. **Ensure the Region is set to your desired home Region, as it typically defaults to US East (N. Virginia)**
 
@@ -62,6 +64,8 @@ If you are changing the home region from *ca-central-1* to  different region, yo
 
 - global-config.yaml - **homeRegion: &HOME_REGION ca-central-1** must be updated from *ca-central-1* to the region you are using as your home region, e.g. *homeRegion: &HOME_REGION eu-west-2*
 - global-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
+- security-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
+- customizations-config.yaml - Update references to *ca-central-1* to the region you are using as your home region
 
 ### 3.2.2 Changing the accelerator prefix
 
@@ -88,7 +92,7 @@ Some configuration elements need to be updated when using ControlTower
 - replacements-config.yaml 
   * Update the value for `CloudTrailLogGroup` to `aws-controltower/CloudTrailLogs`
 - global-config.yaml 
-  * Update `managementAccountAccessRole` value to `AWSControlTowerExecution
+  * Update `managementAccountAccessRole` value to `AWSControlTowerExecution`
   * Update `controlTower` to `enable: true`
   * Uncomment the `landingZone` block
   * Under `logging/cloudtrail/organizationTrailSettings` set `managementEvents` to `false`, an Organizational Trail was already setup by CloudTrail.

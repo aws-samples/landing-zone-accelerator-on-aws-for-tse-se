@@ -567,16 +567,10 @@ vpcs:
         port: 443
         protocol: HTTPS
         type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
       - name: Public-DevTest-tg
         port: 443
         protocol: HTTPS
         type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
   - name: Dev
     tags:
       - key: Name
@@ -921,9 +915,6 @@ vpcs:
     #     port: 443
     #     protocol: HTTPS
     #     type: instance
-    #     connectionTermination: true
-    #     preserveClientIp: true
-    #     proxyProtocolV2: true
     #     shareTargets:
     #       organizationalUnits:
     #         - Dev

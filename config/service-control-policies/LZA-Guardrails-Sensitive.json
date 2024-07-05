@@ -233,6 +233,7 @@
         "ec2:DescribeVpnGateways",
         "fms:*",
         "globalaccelerator:*",
+        "guardduty:*",
         "health:*",
         "iam:*",
         "kms:*",

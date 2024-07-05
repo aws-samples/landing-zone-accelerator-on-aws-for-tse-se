@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1-a] 2024-07-05
+
+### Changed
+- fix(network-config): Removed invalid target group attributes definition
+- fix(security): Exclude GUARDDUTY_NON_ARCHIVED_FINDINGS config rule from ca-west-1 until it becomes available
+- fix(scp): Modified GLB1 SCP to allow GuardDuty findings to be viewed in other regions
+
 ## [1.7.0-a] - 2024-06-03
 ### Added
 - feat(network-config): Add deployments of Application Load Balancers in perimeter VPC. Added sample to deploy ALB in workload accounts and ALB Forwarding feature.

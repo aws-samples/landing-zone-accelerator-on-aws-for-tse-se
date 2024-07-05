@@ -351,6 +351,12 @@ awsConfig:
           identifier: ACM_CERTIFICATE_EXPIRATION_CHECK
         - name: "{{ AcceleratorPrefix }}-alb-waf-enabled"
           identifier: ALB_WAF_ENABLED
+        - name: "{{ AcceleratorPrefix }}-guardduty-non-archived-findings"
+          inputParameters:
+            daysHighSev: "1"
+            daysLowSev: "30"
+            daysMediumSev: "7"
+          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
     - deploymentTargets:
         ##  Section for config rules across all OUs except Sandbox + Management Account
         ## Rules not supported in ap-northeast-3 ONLY
@@ -391,12 +397,6 @@ awsConfig:
           complianceResourceTypes:
             - AWS::ElasticLoadBalancing::LoadBalancer
           identifier: ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED
-        - name: "{{ AcceleratorPrefix }}-guardduty-non-archived-findings"
-          inputParameters:
-            daysHighSev: "1"
-            daysLowSev: "30"
-            daysMediumSev: "7"
-          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
         - name: "{{ AcceleratorPrefix }}-incoming-ssh-disabled"
           identifier: INCOMING_SSH_DISABLED
         - name: "{{ AcceleratorPrefix }}-ec2-instances-in-vpc"

@@ -81,6 +81,8 @@ If you are changing the home region from *ca-central-1* to  different region, yo
 
 - global-config.yaml - **homeRegion: &HOME_REGION ca-central-1** must be updated from *ca-central-1* to the region you are using as your home region, e.g. *homeRegion: &HOME_REGION eu-west-2*
 - global-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
+- security-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
+- customizations-config.yaml - Update references to *ca-central-1* to the region you are using as your home region
 
 ### 3.3.2 Changing the accelerator prefix
 
