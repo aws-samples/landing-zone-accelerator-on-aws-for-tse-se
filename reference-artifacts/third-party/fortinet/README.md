@@ -23,9 +23,9 @@ _Note: the [config](./config/) sub-folder contains sample configuration files an
   a. Modify the path to your licence files for the two firewall instances  
   b. Modify the value of `CORP_CIDR_1` variable as needed (two instances) to reflect the CIDR range of the VPC reachable through the transit gateway  
   c. (Optional) Add the `applications` block to the `customization-config.yaml` to deploy rsyslog servers to send Fortigate logs to CloudWatch  
-5. In the `iam-config.yaml` file ensure the role used by the firewall instance is defined (i.e. `AWSAccelerator-Firewall-Role`)
+5. In the `iam-config.yaml` file ensure the role used by the firewall instance is defined (i.e. `Firewall-Role`)
       <details>
-        <summary>Definition of AWSAccelerator-Firewall-Role in iam-config.yaml</summary>
+        <summary>Definition of Firewall-Role in iam-config.yaml</summary>
 
       ```
       roleSets:
@@ -33,7 +33,7 @@ _Note: the [config](./config/) sub-folder contains sample configuration files an
             accounts:
               - Perimeter
           roles:
-            - name: "{{ AcceleratorPrefix }}-Firewall-Role"
+            - name: Firewall-Role
               instanceProfile: true
               assumedBy:
                 - type: service
@@ -299,7 +299,7 @@ firewalls:
               encrypted: true
         securityGroups: []
         enforceImdsv2: true
-        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        iamInstanceProfile: Firewall-Role
         imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
         instanceType: c5n.xlarge
         networkInterfaces:
@@ -349,7 +349,7 @@ firewalls:
               encrypted: true
         securityGroups: []
         enforceImdsv2: true
-        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        iamInstanceProfile: Firewall-Role
         imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
         instanceType: c5n.xlarge
         networkInterfaces:
@@ -436,7 +436,7 @@ applications:
         - Operations-Rsyslog-sg
         - Management
       # this instance profile is in iam-config.yaml under roleSets
-      iamInstanceProfile: AWSAccelerator-Rsyslog-Role
+      iamInstanceProfile: Rsyslog-Role
       # Local or public SSM parameter store lookup for Image ID
       imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
       instanceType: t3.large
@@ -487,7 +487,7 @@ applications:
             ebs:
               encrypted: false
               volumeSize: 80
-        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        iamInstanceProfile: Firewall-Role
         imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-qexuw2zy5yuo2/7.2.5}
         instanceType: m5.xlarge
         networkInterfaces:

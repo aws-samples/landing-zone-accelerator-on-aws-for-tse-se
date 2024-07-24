@@ -481,7 +481,7 @@ cloudWatch:
         accounts:
           - Management
       metrics:
-        # CIS 1.1 – Avoid the use of the "root" account
+        # CIS 1.1 – Avoid the use of the "root" account ; CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         - filterName: "{{ AcceleratorPrefix }}-RootAccountMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
@@ -502,13 +502,6 @@ cloudWatch:
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleSigninWithoutMFA
           metricValue: "1"
-        # CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
-        # - filterName: {{ AcceleratorPrefix }}-MetricFilter
-        #   logGroupName: {{ CloudTrailLogGroup }}
-        #   filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
-        #   metricNamespace: CloudTrailMetrics
-        #   metricName: RootAccountUsage
-        #   metricValue: "1"
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - filterName: "{{ AcceleratorPrefix }}-IAMPolicyChangesMetricFilter"
           logGroupName: {{ CloudTrailLogGroup }}
@@ -635,11 +628,11 @@ cloudWatch:
         accounts:
           - Management
       alarms:
-        # CIS 1.1 – Avoid the use of the "root" account
+        # CIS 1.1 – Avoid the use of the "root" account ; CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         - alarmName: "{{ AcceleratorPrefix }}-CIS-1.1-RootAccountUsage"
           alarmDescription: Alarm for usage of "root" account
           snsTopicName: SecurityLow
-          metricName: RootAccountUsage
+          metricName: RootAccount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
@@ -671,20 +664,6 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
-        # Duplicate of CIS 1.1
-        # - alarmName: CIS-3.3-RootAccountUsage
-        #   alarmDescription: Alarm for usage of "root" account
-        #   snsTopicName: SecurityLow
-        #   metricName: RootAccountUsage
-        #   namespace: CloudTrailMetrics
-        #   comparisonOperator: GreaterThanOrEqualToThreshold
-        #   evaluationPeriods: 1
-        #   period: 300
-        #   statistic: Sum
-        #   threshold: 1
-        #   treatMissingData: notBreaching
-        # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.4-IAMPolicyChanges"
           alarmDescription: Alarm for IAM policy changes
           snsTopicName: SecurityMedium
@@ -908,17 +887,6 @@ cloudWatch:
           alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
           snsTopicName: SecurityLow
           metricName: AuthorizationFailureCount
-          namespace: CloudTrailMetrics
-          comparisonOperator: GreaterThanOrEqualToThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Sum
-          threshold: 1
-          treatMissingData: notBreaching
-        - alarmName: "{{ AcceleratorPrefix }}-AWS-Root-Login"
-          alarmDescription: Alarms when the root user successfully logs in one or more times (in any account, any region of your AWS Organization).
-          snsTopicName: SecurityHigh
-          metricName: RootLoginEventCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1

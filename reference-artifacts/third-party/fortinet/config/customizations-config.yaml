@@ -20,7 +20,7 @@ firewalls:
               encrypted: true
         securityGroups: []
         enforceImdsv2: true
-        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        iamInstanceProfile: Firewall-Role
         imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
         instanceType: c5n.xlarge
         networkInterfaces:
@@ -70,7 +70,7 @@ firewalls:
               encrypted: true
         securityGroups: []
         enforceImdsv2: true
-        iamInstanceProfile: "{{ AcceleratorPrefix }}-Firewall-Role"
+        iamInstanceProfile: Firewall-Role
         imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
         instanceType: c5n.xlarge
         networkInterfaces:
@@ -150,7 +150,7 @@ applications:
         - Operations-Rsyslog-sg
         - Management
       # this instance profile is in iam-config.yaml under roleSets
-      iamInstanceProfile: AWSAccelerator-Rsyslog-Role
+      iamInstanceProfile: Rsyslog-Role
       # Local or public SSM parameter store lookup for Image ID
       imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
       instanceType: t3.large

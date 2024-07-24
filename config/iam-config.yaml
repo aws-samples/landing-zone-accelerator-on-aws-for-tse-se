@@ -35,7 +35,7 @@ roleSets:
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
-      - name: "{{ AcceleratorPrefix }}-RDGW-Role"
+      - name: RDGW-Role
         instanceProfile: true
         assumedBy:
           - type: service
@@ -46,7 +46,7 @@ roleSets:
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
-      - name: "{{ AcceleratorPrefix }}-Rsyslog-Role"
+      - name: Rsyslog-Role
         instanceProfile: true
         assumedBy:
           - type: service
@@ -61,7 +61,7 @@ roleSets:
       accounts:
         - Perimeter
     roles:
-      - name: "{{ AcceleratorPrefix }}-Firewall-Role"
+      - name: Firewall-Role
         instanceProfile: true
         assumedBy:
           - type: service
@@ -132,7 +132,7 @@ managedActiveDirectories:
       imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
       securityGroupInboundSources:
         - 10.1.0.0/16
-      instanceRole: "{{ AcceleratorPrefix }}-RDGW-Role"
+      instanceRole: RDGW-Role
       userDataScripts:
         - scriptName: JoinDomain
           scriptFilePath: ad-config-scripts/Join-Domain.ps1
