@@ -40,5 +40,5 @@ configVersion: 1.7.0-a
 
 #### Reference configuration update
 1. Review and implement any relevant tasks noted in the **Update Preparation** section above
-2. Update the configuration files in the `aws-accelerator-config` **CodeCommit** repository as outlined in the **Update Preparation** section above
+2. Update the configuration files in the `aws-accelerator-config` **CodeCommit** repository or configuration S3 bucket as outlined in the **Update Preparation** section above
 3. Manually release the `AWSAccelerator-Pipeline` pipeline.

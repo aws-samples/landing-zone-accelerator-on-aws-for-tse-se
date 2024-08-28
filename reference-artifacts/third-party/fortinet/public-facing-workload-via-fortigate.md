@@ -119,7 +119,7 @@ These are pairs of targets (one for each firewall) that direct traffic from the 
 The following configuration will be executed per Firewall instance (twice with the default LZA configuration).
 
 1. Log in to the firewall instance.
-2. Switch the Virtual Domain (vdom) to **FG-traffic**.
+2. Switch the Virtual Domain (VDOM) to **FG-traffic**.
 
 ![FGVdeom](img/public-facing-workload-via-fortigate/Picture16.png)
 
@@ -185,3 +185,42 @@ The following configuration will be executed per Firewall instance (twice with t
 14. After refreshing the page, the row background should be white, and the new destination is visible.
 
 ![FGIPv4Policy5](img/public-facing-workload-via-fortigate/Picture29.png)
+
+
+# 2. Confirming functionality
+
+To confirm traffic is flowing through the FortiGate Firewall instances as expected for the public facing web application, the following steps can serve as a reference.
+
+## 2.1. Traffic logs
+
+To look at the traffic logs, follow the steps below.  Note that these steps need to be repeated on each FortiGate instance unless a FortiAnalyzer or other central logging solution has been implemented.
+
+1. Switch the Virtual Domain (VDOM) to **FG-traffic**
+2. Navigate to **Log & Report** and expand **Forward Traffic**
+3. Traffic forwarded through the Firewall will be displayed.  A search filter can be applied to reduce the number of entries.
+
+More details on search filters are at https://community.fortinet.com/t5/FortiGate/Technical-Tip-How-to-apply-filters-in-forward-traffic-logs/ta-p/198201
+
+## 2.2. Troubleshooting
+
+More detailed troubleshooting is typically performed by looking at the entirety of a test application flow, by observing the network packets at various points.
+
+### 2.2.1. Performing a sniffer trace or packet capture on the FortiGate instances
+
+To look at the packet flow passing through the FortiGate firewall and verify the Network Address Translation being performed follow the steps below:
+
+1. Switch the Virtual Domain (VDOM) to **FG-traffic**
+2. Navigate to **Network** and expand **Diagnostics** and click the **Packet Capture** tab
+3. Leave **any** as the interface default
+4. Enable **Filters** and select a Filtering syntax under **Basic**:
+5. Enter criteria for the **Host** and **Port**
+6. Click **Start capture**. The capture is visible in real-time
+
+More details on this FortiGate GUI can found at https://docs.fortinet.com/document/fortigate/7.2.0/administration-guide/462154/using-the-packet-capture-tool
+
+The Fortinet reference documentation has more details on how to perform these steps via the FortiGate CLI at https://docs.fortinet.com/document/fortigate/7.2.0/administration-guide/680228
+
+
+### 2.2.2. VPC Flow logs
+
+Creating a VPC flow log in the perimeter VPC as well as in the web application VPC (typically named Dev) might prove useful as well. Refer to the extensive AWS documentation located at https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html

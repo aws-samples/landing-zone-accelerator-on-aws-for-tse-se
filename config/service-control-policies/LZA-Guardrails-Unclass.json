@@ -5,11 +5,12 @@
       "Sid": "PMP",
       "Effect": "Deny",
       "Action": [
-        "aws-marketplace:CreatePrivate*",
-        "aws-marketplace:AssociateProductsWithPrivate*",
-        "aws-marketplace:DescribePrivate*",
-        "aws-marketplace:DisassociateProducts*",
-        "aws-marketplace:ListPrivate*"
+        "aws-marketplace:As*",
+        "aws-marketplace:CreateP*",
+        "aws-marketplace:DescribePri*",
+        "aws-marketplace:Di*",
+        "aws-marketplace:ListP*",
+        "aws-marketplace:Start*"
       ],
       "Resource": "*"
     },
@@ -188,7 +189,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalArn": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/AWSAOps-*"]
+          "aws:PrincipalArn": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
     },
@@ -204,6 +205,7 @@
         "ce:*",
         "chime:*",
         "cloudfront:*",
+        "cloudwatch:GetMetricData",
         "config:*",
         "cur:*",
         "directconnect:*",
@@ -212,6 +214,7 @@
         "ec2:DescribeVpnGateways",
         "fms:*",
         "globalaccelerator:*",
+        "guardduty:*",
         "health:*",
         "iam:*",
         "networkmanager:*",
@@ -239,6 +242,8 @@
         "s3:GetMultiR*",
         "s3:ListMultiR*",
         "s3:PutMultiR*",
+        "tag:GetResources",
+        "sso:DescribeRegisteredRegions",
         "billing:*",
         "freetier:*",
         "account:*",
@@ -260,7 +265,7 @@
           ]
         },
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}", "arn:${PARTITION}:iam::*:role/AWSServiceRoleFor*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     }

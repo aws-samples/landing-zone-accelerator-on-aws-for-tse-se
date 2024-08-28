@@ -20,9 +20,22 @@ _Note: the [config](./config/) sub-folder contains sample configuration files an
   c. Add section to define the `customerGateways`  
   d. Create security group for the Firewall instances. Update source IP allowed to access the management interface on port 443
 4. Create a `customization-config.yaml` file and add a section for `firewalls/instances` (see sample below)  
-  a. Modify the path to your licence files for the two firewall instances  
-  b. Modify the value of `CORP_CIDR_1` variable as needed (two instances) to reflect the CIDR range of the VPC reachable through the transit gateway  
-  c. (Optional) Add the `applications` block to the `customization-config.yaml` to deploy rsyslog servers to send Fortigate logs to CloudWatch  
+    a. Modify the path to your licence files for the two firewall instances in each of the two lines starting with
+    ```
+    licenseFile: fortinet/FGVMxxxx.lic # UPDATE WITH YOUR LICENSE FILE NAME
+    ```
+    b. In the same file are the AMI ID lookup string of the FortiGate-VM instances (line 25 and 74).  The example value is for FortiGate-VM FortiOS version 7.2.8 using bring your own  license(BYOL) licensing.
+    ```
+    imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-65dnewvcsm3xk/7.2.8}
+    ```
+    A different AMI ID lookup string value will be needed if using Marketplace (PayG/onDemand) licensing instead of BYOL
+    ```
+    imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/marketplace/prod-6oyufhmqih7iy/7.2.8}
+    ```
+    c. Modify the value of `CORP_CIDR_1` variable as needed (two instances) to reflect the CIDR range of the VPC reachable through the transit gateway
+
+    d. Optionally add the `applications` block to the `customization-config.yaml` to deploy rsyslog servers to send FortiGate logs to CloudWatch
+
 5. In the `iam-config.yaml` file ensure the role used by the firewall instance is defined (i.e. `Firewall-Role`)
       <details>
         <summary>Definition of Firewall-Role in iam-config.yaml</summary>
@@ -48,22 +61,26 @@ _Note: the [config](./config/) sub-folder contains sample configuration files an
       </details>
 
 6. Create a userdata folder in your `aws-accelerator-config` folder  
-  a. Copy the reference files `userdata/fw1.txt` and `userdata/fw2.txt` from this repository  
-  b. Modify the content of `userdata/fw1.txt` and `userdata/fw2.txt` with the appropriate licence file name  
-  c. Make sure to include those files in your git commit in the next step (i.e. `git add userdata`)  
+    a. Copy the reference files `userdata/fw1.txt` and `userdata/fw2.txt` from this repository
+
+    b. Modify the content of `userdata/fw1.txt` and `userdata/fw2.txt` with the appropriate licence file name
+    ```
+    "license": "fortinet/FGVMxxxx.lic",
+    ```
+    c. Make sure to include those files in your git commit in the next step (i.e. `git add userdata`)
 7. Commit and push all changes to your `aws-accelerator-config` CodeCommit repository
-8. Run the pipepline
-9. Verify deployment and connect to the Firewall instances, set the admin password and confirm the licences are correclty activated
+8. Run the pipeline
+9. Verify deployment and connect to the Firewall instances, set the admin password and confirm the licences are correctly activated
 10. Configure firewall policies as needed and confirm networking is working as expected. See the [public-facing-workload-via-fortigate.md](public-facing-workload-via-fortigate.md) document for an example to configure a public facing web application that is deployed within a workload AWS Account
 11. [Optional] Commenting the `centralNetworkServices/networkFirewall` block removed the AWS Network Firewall from the perimeter account, but the firewall policy and rules are still present in the Network accounts. Connect to the network account using a privileged role and delete those resources to finalize cleanup.
-12. [Optional] Remove the NAT Gateways and update the route tables of `Perimeter-A` and `Perimeter-B` subnets to target the Fortigate Elastic Network Interfaces (ENI) in the network-config.yaml configuration file and re-run the pipeline.
-13. [Optional] Configure Fortigates to send logs to rsyslog or FortiAnalyzer.
+12. [Optional] Remove the NAT Gateways and update the route tables of `Perimeter-A` and `Perimeter-B` subnets to target the FortiGate Elastic Network Interfaces (ENI) in the network-config.yaml configuration file and re-run the pipeline.
+13. [Optional] Configure FortiGates to send logs to rsyslog or FortiAnalyzer.
 
 ### Detailed steps for network-config.yaml file
 
 1. Remove the AWS Network Firewall by commenting the `centralNetworkServices/networkFirewall` configuration block
 
-2. In the `transitGateways/routeTables` remove the 0.0.0.0 route that use the Perimeter VPC attachement (The Fortigates will connect to the TGW using an IPSec tunnel)
+2. In the `transitGateways/routeTables` remove the 0.0.0.0 route that use the Perimeter VPC attachment (The FortiGates will connect to the TGW using an IPSec tunnel)
 
 The configuration should look like this
 
@@ -98,7 +115,7 @@ transitGateways:
         routes: []
 ```
 
-3. Add a `customerGateways` block to define the IpSec tunnel endpoints with the Fortigate
+3. Add a `customerGateways` block to define the IpSec tunnel endpoints with the FortiGate
 
 ```
 customerGateways:
@@ -193,7 +210,7 @@ customerGateways:
               - 0.0.0.0/0
 ```
 
-5. Modify the route tables in the Perimeter VPC that were previously targetting the AWS Network Firewall (`AWSAccelerator-firewall`). Add the route table `Applications` in subnets `Perimeter-A` and `Perimeter-B`
+5. Modify the route tables in the Perimeter VPC that were previously targeting the AWS Network Firewall (`AWSAccelerator-firewall`). Add the route table `Applications` in subnets `Perimeter-A` and `Perimeter-B`
 
 The final `routeTables` block in Perimeter VPC should look like this
 

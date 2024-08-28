@@ -94,7 +94,7 @@ async function evaluateCompliance(props) {
         if (!requiredPolicy) {
           continue;
         }
-        if (!existingPolicyArns.includes(requiredPolicy.trim())) {
+        if (!existingPolicyNames.includes(requiredPolicy.trim())) {
           return {
             complianceType: 'NON_COMPLIANT',
             annotation: 'The IAM Role is not having required policies attached ' + requiredPolicy,

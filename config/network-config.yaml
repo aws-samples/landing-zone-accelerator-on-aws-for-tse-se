@@ -50,7 +50,7 @@ centralNetworkServices:
           description: Pool for sandbox environment
           locale: {{ AcceleratorHomeRegion }}
           provisionedCidrs:
-            - 10.0.0.0/8
+            - "{{ sandboxCidr }}"
           shareTargets:
             organizationalUnits:
               - Sandbox
@@ -144,7 +144,7 @@ centralNetworkServices:
         type: OUTBOUND
         vpc: Endpoint
         allowedCidrs:
-          - {{ AwsRangeCidr }}
+          - {{ AcceleratorIpamSupernet }}
         subnets:
           - Endpoint-A
           - Endpoint-B
@@ -191,7 +191,7 @@ prefixLists:
     addressFamily: "IPv4"
     maxEntries: 1
     entries:
-      - 10.1.0.1/32
+      - "{{ OnPremisesPrefixList }}"
 ###################################################################################
 # Self signed certificates are deployed as an example.                            #
 # Replace by your own certificate or request them with Amazon Certificate Manager #
@@ -252,19 +252,19 @@ vpcs:
       - name: Endpoint-A
         availabilityZone: a
         routeTable: Endpoint
-        ipv4CidrBlock: 10.7.0.0/24
+        ipv4CidrBlock: "{{ Subnet-Endpoint-A }}"
       - name: Endpoint-B
         availabilityZone: b
         routeTable: Endpoint
-        ipv4CidrBlock: 10.7.1.0/24
+        ipv4CidrBlock: "{{ Subnet-Endpoint-B }}"
       - name: EndpointTgwAttach-A
         availabilityZone: a
         routeTable: Endpoint
-        ipv4CidrBlock: 10.7.3.208/28
+        ipv4CidrBlock: "{{ Subnet-EndpointTgwAttach-A }}"
       - name: EndpointTgwAttach-B
         availabilityZone: b
         routeTable: Endpoint
-        ipv4CidrBlock: 10.7.3.224/28
+        ipv4CidrBlock: "{{ Subnet-EndpointTgwAttach-B }}"
     transitGatewayAttachments:
       - name: Endpoint
         transitGateway:
@@ -372,12 +372,12 @@ vpcs:
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: NfwRouteToNatA
-            destination: 10.7.7.176/28
+            destination: "{{ Subnet-Perimeter-Nat-A }}"
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: NfwRouteToNatB
-            destination: 10.7.7.192/28
+            destination: "{{ Subnet-Perimeter-Nat-B }}"
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
@@ -389,12 +389,12 @@ vpcs:
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
           - name: NfwRouteToNatA
-            destination: 10.7.7.176/28
+            destination: "{{ Subnet-Perimeter-Nat-A }}"
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
           - name: NfwRouteToNatB
-            destination: 10.7.7.192/28
+            destination: "{{ Subnet-Perimeter-Nat-B }}"
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
@@ -405,7 +405,7 @@ vpcs:
             type: natGateway
             target: Nat-Perimeter-A
           - name: TgwRoute
-            destination: {{ AwsRangeCidr }}
+            destination: {{ AcceleratorIpamSupernet }}
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -421,7 +421,7 @@ vpcs:
             type: natGateway
             target: Nat-Perimeter-B
           - name: TgwRoute
-            destination: {{ AwsRangeCidr }}
+            destination: {{ AcceleratorIpamSupernet }}
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -433,7 +433,7 @@ vpcs:
       - name: Perimeter-Nat-A
         routes:
           - name: NfwNatRoute
-            destination: {{ AwsRangeCidr }}
+            destination: {{ AcceleratorIpamSupernet }}
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
@@ -444,7 +444,7 @@ vpcs:
       - name: Perimeter-Nat-B
         routes:
           - name: NfwNatRoute
-            destination: {{ AwsRangeCidr }}
+            destination: {{ AcceleratorIpamSupernet }}
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
@@ -456,27 +456,27 @@ vpcs:
       - name: Perimeter-A
         availabilityZone: a
         routeTable: Perimeter-A
-        ipv4CidrBlock: 10.7.4.0/24
+        ipv4CidrBlock: "{{ Subnet-Perimeter-A }}"
       - name: Perimeter-B
         availabilityZone: b
         routeTable: Perimeter-B
-        ipv4CidrBlock: 10.7.5.0/24
+        ipv4CidrBlock: "{{ Subnet-Perimeter-B }}"
       - name: PerimeterTgwAttach-A
         availabilityZone: a
         routeTable: Perimeter-Tgw-A
-        ipv4CidrBlock: 10.7.7.208/28
+        ipv4CidrBlock: "{{ Subnet-Perimeter-Tgw-A }}"
       - name: PerimeterTgwAttach-B
         availabilityZone: b
         routeTable: Perimeter-Tgw-B
-        ipv4CidrBlock: 10.7.7.224/28
+        ipv4CidrBlock: "{{ Subnet-Perimeter-Tgw-B }}"
       - name: PerimeterNat-A
         availabilityZone: a
         routeTable: Perimeter-Nat-A
-        ipv4CidrBlock: 10.7.7.176/28
+        ipv4CidrBlock: "{{ Subnet-Perimeter-Nat-A }}"
       - name: PerimeterNat-B
         availabilityZone: b
         routeTable: Perimeter-Nat-B
-        ipv4CidrBlock: 10.7.7.192/28
+        ipv4CidrBlock: "{{ Subnet-Perimeter-Nat-B }}"
     natGateways:
       - name: Nat-Perimeter-A
         subnet: PerimeterNat-A
@@ -633,7 +633,7 @@ vpcs:
             value: Dev-Web-A
         availabilityZone: a
         routeTable: Dev
-        ipv4CidrBlock: 10.2.16.0/20
+        ipv4CidrBlock: "{{ Subnet-Dev-Web-A }}"
         shareTargets:
           organizationalUnits:
             - Dev
@@ -643,7 +643,7 @@ vpcs:
             value: Dev-Web-B
         availabilityZone: b
         routeTable: Dev
-        ipv4CidrBlock: 10.2.32.0/20
+        ipv4CidrBlock: "{{ Subnet-Dev-Web-B }}"
         shareTargets:
           organizationalUnits:
             - Dev
@@ -653,7 +653,7 @@ vpcs:
             value: Dev-App-A
         availabilityZone: a
         routeTable: Dev
-        ipv4CidrBlock: 10.2.64.0/19
+        ipv4CidrBlock: "{{ Subnet-Dev-App-A }}"
         shareTargets:
           organizationalUnits:
             - Dev
@@ -663,7 +663,7 @@ vpcs:
             value: Dev-App-B
         availabilityZone: b
         routeTable: Dev
-        ipv4CidrBlock: 10.2.96.0/19
+        ipv4CidrBlock: "{{ Subnet-Dev-App-B }}"
         shareTargets:
           organizationalUnits:
             - Dev
@@ -673,7 +673,7 @@ vpcs:
             value: Dev-Data-A
         availabilityZone: a
         routeTable: Dev
-        ipv4CidrBlock: 10.2.160.0/20
+        ipv4CidrBlock: "{{ Subnet-Dev-Data-A }}"
         shareTargets:
           organizationalUnits:
             - Dev
@@ -683,7 +683,7 @@ vpcs:
             value: Dev-Data-B
         availabilityZone: b
         routeTable: Dev
-        ipv4CidrBlock: 10.2.176.0/20
+        ipv4CidrBlock: "{{ Subnet-Dev-Data-B }}"
         shareTargets:
           organizationalUnits:
             - Dev
@@ -693,28 +693,28 @@ vpcs:
             value: Dev-MainTgwAttach-A
         availabilityZone: a
         routeTable: Dev
-        ipv4CidrBlock: 10.2.0.0/27
+        ipv4CidrBlock: "{{ Subnet-Dev-MainTgwAttach-A }}"
       - name: Dev-MainTgwAttach-B
         tags:
           - key: Name
             value: Dev-MainTgwAttach-B
         availabilityZone: b
         routeTable: Dev
-        ipv4CidrBlock: 10.2.0.32/27
+        ipv4CidrBlock: "{{ Subnet-Dev-MainTgwAttach-B }}"
       - name: Dev-Mgmt-A
         tags:
           - key: Name
             value: Dev-Mgmt-A
         availabilityZone: a
         routeTable: Dev
-        ipv4CidrBlock: 10.2.8.0/21
+        ipv4CidrBlock: "{{ Subnet-Dev-Mgmt-A }}"
       - name: Dev-Mgmt-B
         tags:
           - key: Name
             value: Dev-Mgmt-B
         availabilityZone: b
         routeTable: Dev
-        ipv4CidrBlock: 10.2.208.0/21
+        ipv4CidrBlock: "{{ Subnet-Dev-Mgmt-B }}"
     securityGroups:
       - name: "Management"
         description: "Management Security Group"
@@ -1090,7 +1090,7 @@ vpcs:
             value: Central-Web-A
         availabilityZone: a
         routeTable: Central
-        ipv4CidrBlock: 10.1.16.0/20
+        ipv4CidrBlock: "{{ Subnet-Central-Web-A }}"
         shareTargets:
           organizationalUnits:
             - Central
@@ -1102,7 +1102,7 @@ vpcs:
             value: Central-Web-B
         availabilityZone: b
         routeTable: Central
-        ipv4CidrBlock: 10.1.32.0/20
+        ipv4CidrBlock: "{{ Subnet-Central-Web-B }}"
         shareTargets:
           organizationalUnits:
             - Central
@@ -1114,7 +1114,7 @@ vpcs:
             value: Central-App-A
         availabilityZone: a
         routeTable: Central
-        ipv4CidrBlock: 10.1.64.0/19
+        ipv4CidrBlock: "{{ Subnet-Central-App-A }}"
         shareTargets:
           organizationalUnits:
             - Central
@@ -1126,7 +1126,7 @@ vpcs:
             value: Central-App-B
         availabilityZone: b
         routeTable: Central
-        ipv4CidrBlock: 10.1.96.0/19
+        ipv4CidrBlock: "{{ Subnet-Central-App-B }}"
         shareTargets:
           organizationalUnits:
             - Central
@@ -1138,7 +1138,7 @@ vpcs:
             value: Central-Data-A
         availabilityZone: a
         routeTable: Central
-        ipv4CidrBlock: 10.1.160.0/20
+        ipv4CidrBlock: "{{ Subnet-Central-Data-A }}"
         shareTargets:
           organizationalUnits:
             - Central
@@ -1150,7 +1150,7 @@ vpcs:
             value: Central-Data-B
         availabilityZone: b
         routeTable: Central
-        ipv4CidrBlock: 10.1.176.0/20
+        ipv4CidrBlock: "{{ Subnet-Central-Data-B }}"
         shareTargets:
           organizationalUnits:
             - Central
@@ -1162,28 +1162,28 @@ vpcs:
             value: Central-MainTgwAttach-A
         availabilityZone: a
         routeTable: Central
-        ipv4CidrBlock: 10.1.0.0/27
+        ipv4CidrBlock: "{{ Subnet-Central-MainTgwAttach-A }}"
       - name: Central-MainTgwAttach-B
         tags:
           - key: Name
             value: Central-MainTgwAttach-B
         availabilityZone: b
         routeTable: Central
-        ipv4CidrBlock: 10.1.0.32/27
+        ipv4CidrBlock: "{{ Subnet-Central-MainTgwAttach-B }}"
       - name: Central-Mgmt-A
         tags:
           - key: Name
             value: Central-Mgmt-A
         availabilityZone: a
         routeTable: Central
-        ipv4CidrBlock: 10.1.8.0/21
+        ipv4CidrBlock: "{{ Subnet-Central-Mgmt-A }}"
       - name: Central-Mgmt-B
         tags:
           - key: Name
             value: Central-Mgmt-B
         availabilityZone: b
         routeTable: Central
-        ipv4CidrBlock: 10.1.208.0/21
+        ipv4CidrBlock: "{{ Subnet-Central-Mgmt-B }}"
     transitGatewayAttachments:
       - name: Central-Main
         transitGateway:
@@ -1266,7 +1266,7 @@ vpcs:
             value: Test-Web-A
         availabilityZone: a
         routeTable: Test
-        ipv4CidrBlock: 10.3.16.0/20
+        ipv4CidrBlock: "{{ Subnet-Test-Web-A }}"
         shareTargets:
           organizationalUnits:
             - Test
@@ -1276,7 +1276,7 @@ vpcs:
             value: Test-Web-B
         availabilityZone: b
         routeTable: Test
-        ipv4CidrBlock: 10.3.32.0/20
+        ipv4CidrBlock: "{{ Subnet-Test-Web-B }}"
         shareTargets:
           organizationalUnits:
             - Test
@@ -1286,7 +1286,7 @@ vpcs:
             value: Test-App-A
         availabilityZone: a
         routeTable: Test
-        ipv4CidrBlock: 10.3.64.0/19
+        ipv4CidrBlock: "{{ Subnet-Test-App-A }}"
         shareTargets:
           organizationalUnits:
             - Test
@@ -1296,7 +1296,7 @@ vpcs:
             value: Test-App-B
         availabilityZone: b
         routeTable: Test
-        ipv4CidrBlock: 10.3.96.0/19
+        ipv4CidrBlock: "{{ Subnet-Test-App-B }}"
         shareTargets:
           organizationalUnits:
             - Test
@@ -1306,7 +1306,7 @@ vpcs:
             value: Test-Data-A
         availabilityZone: a
         routeTable: Test
-        ipv4CidrBlock: 10.3.160.0/20
+        ipv4CidrBlock: "{{ Subnet-Test-Data-A }}"
         shareTargets:
           organizationalUnits:
             - Test
@@ -1316,7 +1316,7 @@ vpcs:
             value: Test-Data-B
         availabilityZone: b
         routeTable: Test
-        ipv4CidrBlock: 10.3.176.0/20
+        ipv4CidrBlock: "{{ Subnet-Test-Data-B }}"
         shareTargets:
           organizationalUnits:
             - Test
@@ -1326,28 +1326,28 @@ vpcs:
             value: Test-MainTgwAttach-A
         availabilityZone: a
         routeTable: Test
-        ipv4CidrBlock: 10.3.0.0/27
+        ipv4CidrBlock: "{{ Subnet-Test-MainTgwAttach-A }}"
       - name: Test-MainTgwAttach-B
         tags:
           - key: Name
             value: Test-MainTgwAttach-B
         availabilityZone: b
         routeTable: Test
-        ipv4CidrBlock: 10.3.0.32/27
+        ipv4CidrBlock: "{{ Subnet-Test-MainTgwAttach-B }}"
       - name: Test-Mgmt-A
         tags:
           - key: Name
             value: Test-Mgmt-A
         availabilityZone: a
         routeTable: Test
-        ipv4CidrBlock: 10.3.8.0/21
+        ipv4CidrBlock: "{{ Subnet-Test-Mgmt-A }}"
       - name: Test-Mgmt-B
         tags:
           - key: Name
             value: Test-Mgmt-B
         availabilityZone: b
         routeTable: Test
-        ipv4CidrBlock: 10.3.208.0/21
+        ipv4CidrBlock: "{{ Subnet-Test-Mgmt-B }}"
     securityGroups:
       - name: "Management"
         description: "Management Security Group"
@@ -1579,7 +1579,7 @@ vpcs:
             value: Prod-Web-A
         availabilityZone: a
         routeTable: Prod
-        ipv4CidrBlock: 10.4.16.0/20
+        ipv4CidrBlock: "{{ Subnet-Prod-Web-A }}"
         shareTargets:
           organizationalUnits:
             - Prod
@@ -1589,7 +1589,7 @@ vpcs:
             value: Prod-Web-B
         availabilityZone: b
         routeTable: Prod
-        ipv4CidrBlock: 10.4.32.0/20
+        ipv4CidrBlock: "{{ Subnet-Prod-Web-B }}"
         shareTargets:
           organizationalUnits:
             - Prod
@@ -1599,7 +1599,7 @@ vpcs:
             value: Prod-App-A
         availabilityZone: a
         routeTable: Prod
-        ipv4CidrBlock: 10.4.64.0/19
+        ipv4CidrBlock: "{{ Subnet-Prod-App-A }}"
         shareTargets:
           organizationalUnits:
             - Prod
@@ -1609,7 +1609,7 @@ vpcs:
             value: Prod-App-B
         availabilityZone: b
         routeTable: Prod
-        ipv4CidrBlock: 10.4.96.0/19
+        ipv4CidrBlock: "{{ Subnet-Prod-App-B }}"
         shareTargets:
           organizationalUnits:
             - Prod
@@ -1619,7 +1619,7 @@ vpcs:
             value: Prod-Data-A
         availabilityZone: a
         routeTable: Prod
-        ipv4CidrBlock: 10.4.160.0/20
+        ipv4CidrBlock: "{{ Subnet-Prod-Data-A }}"
         shareTargets:
           organizationalUnits:
             - Prod
@@ -1629,7 +1629,7 @@ vpcs:
             value: Prod-Data-B
         availabilityZone: b
         routeTable: Prod
-        ipv4CidrBlock: 10.4.176.0/20
+        ipv4CidrBlock: "{{ Subnet-Prod-Data-B }}"
         shareTargets:
           organizationalUnits:
             - Prod
@@ -1639,28 +1639,28 @@ vpcs:
             value: Prod-MainTgwAttach-A
         availabilityZone: a
         routeTable: Prod
-        ipv4CidrBlock: 10.4.0.0/27
+        ipv4CidrBlock: "{{ Subnet-Prod-MainTgwAttach-A }}"
       - name: Prod-MainTgwAttach-B
         tags:
           - key: Name
             value: Prod-MainTgwAttach-B
         availabilityZone: b
         routeTable: Prod
-        ipv4CidrBlock: 10.4.0.32/27
+        ipv4CidrBlock: "{{ Subnet-Prod-MainTgwAttach-B }}"
       - name: Prod-Mgmt-A
         tags:
           - key: Name
             value: Prod-Mgmt-A
         availabilityZone: a
         routeTable: Prod
-        ipv4CidrBlock: 10.4.8.0/21
+        ipv4CidrBlock: "{{ Subnet-Prod-Mgmt-A }}"
       - name: Prod-Mgmt-B
         tags:
           - key: Name
             value: Prod-Mgmt-B
         availabilityZone: b
         routeTable: Prod
-        ipv4CidrBlock: 10.4.208.0/21
+        ipv4CidrBlock: "{{ Subnet-Prod-Mgmt-B }}"
     securityGroups:
       - name: "Management"
         description: "Management Security Group"

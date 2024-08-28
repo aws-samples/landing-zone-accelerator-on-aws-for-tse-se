@@ -20,7 +20,10 @@ mainSteps:
       Handler: script_handler
       Script: |-
         import boto3
-        partition = boto3.client("sts").get_caller_identity()['Arn'].split(":")[1]
+        sts = boto3.client("sts")
+        caller_identity = sts.get_caller_identity() 
+        partition = caller_identity['Arn'].split(":")[1]
+        acct = caller_identity['Account']
         iam = boto3.client("iam")
         config = boto3.client("config")
         def script_handler(events, context):
@@ -41,7 +44,7 @@ mainSteps:
             )
           for policy in customer_policy_names:
             iam.attach_role_policy(
-              PolicyArn=policy,
+              PolicyArn="arn:%s:iam::%s:policy/%s" %(partition, acct, policy),
               RoleName=role_name
             )
       InputPayload:

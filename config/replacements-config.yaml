@@ -51,28 +51,191 @@ globalReplacements:
   - key: ActiveDirectoryReadonlyUserEmail
     type: String
     value: example-user2@example.com
-  ######
-  # VPC CIDR definition. If you change these values you also need to update individual subnets range in network-config.yaml
-  - key: VpcCentralCidr
+  ###### IPAM ######
+  - key: sandboxCidr
     type: String
-    value: 10.1.0.0/16
-  - key: VpcDevCidr
+    value: 10.0.0.0/8
+  - key: AcceleratorIpamSupernet
     type: String
-    value: 10.2.0.0/16
-  - key: VpcTestCidr
+    value: 10.0.0.0/8
+  ###### Reserved IP addresses ######
+  ###### OnPremisesPrefixList is used to define which on-premises CIDR range can access managed cloud instances ######
+  ###### If you wish to add multiple on-premise ranges, you can add them to the network-config.yaml under prefixLists/onpremises-prefix-list/entries ######
+  - key: OnPremisesPrefixList
     type: String
-    value: 10.3.0.0/16
-  - key: VpcProdCidr
-    type: String
-    value: 10.4.0.0/16
+    value: 10.1.0.1/32
+  ###### Static Endpoint VPC allocations ######
   - key: VpcEndpointCidr
     type: String
     value: 10.7.0.0/22
+  - key: Subnet-Endpoint-A
+    type: String
+    value: 10.7.0.0/24
+  - key: Subnet-Endpoint-B
+    type: String
+    value: 10.7.1.0/24
+  - key: Subnet-EndpointTgwAttach-A
+    type: String
+    value: 10.7.3.208/28
+  - key: Subnet-EndpointTgwAttach-B
+    type: String
+    value: 10.7.3.224/28
+  ###### Static Perimeter VPC allocations ######
   - key: VpcPerimeterCidr
     type: String
     value: 10.7.4.0/22
-  # CIDR Range that defines the full range of AWS VPCs, referenced in route tables
-  - key: AwsRangeCidr
+  - key: Subnet-Perimeter-A
     type: String
-    value: 10.0.0.0/8
+    value: 10.7.4.0/24
+  - key: Subnet-Perimeter-B
+    type: String
+    value: 10.7.5.0/24
+  - key: Subnet-Perimeter-Nat-A
+    type: String
+    value: 10.7.7.176/28
+  - key: Subnet-Perimeter-Nat-B
+    type: String
+    value: 10.7.7.192/28
+  - key: Subnet-Perimeter-Tgw-A
+    type: String
+    value: 10.7.7.208/28
+  - key: Subnet-Perimeter-Tgw-B
+    type: String
+    value: 10.7.7.224/28
+  ###### Static Dev VPC allocations ######
+  - key: VpcDevCidr
+    type: String
+    value: 10.2.0.0/16
+  - key: Subnet-Dev-Web-A
+    type: String
+    value: 10.2.16.0/20
+  - key: Subnet-Dev-Web-B
+    type: String
+    value: 10.2.32.0/20
+  - key: Subnet-Dev-App-A
+    type: String
+    value: 10.2.64.0/19
+  - key: Subnet-Dev-App-B
+    type: String
+    value: 10.2.96.0/19
+  - key: Subnet-Dev-Data-A
+    type: String
+    value: 10.2.160.0/20
+  - key: Subnet-Dev-Data-B
+    type: String
+    value: 10.2.176.0/20
+  - key: Subnet-Dev-Mgmt-A
+    type: String
+    value: 10.2.8.0/21
+  - key: Subnet-Dev-Mgmt-B
+    type: String
+    value: 10.2.208.0/21
+  - key: Subnet-Dev-MainTgwAttach-A
+    type: String
+    value: 10.2.0.0/27
+  - key: Subnet-Dev-MainTgwAttach-B
+    type: String
+    value: 10.2.0.32/27
+  ###### Static Test VPC allocations ######
+  - key: VpcTestCidr
+    type: String
+    value: 10.3.0.0/16
+  - key: Subnet-Test-Web-A
+    type: String
+    value: 10.3.16.0/20
+  - key: Subnet-Test-Web-B
+    type: String
+    value: 10.3.32.0/20
+  - key: Subnet-Test-App-A
+    type: String
+    value: 10.3.64.0/19
+  - key: Subnet-Test-App-B
+    type: String
+    value: 10.3.96.0/19
+  - key: Subnet-Test-Data-A
+    type: String
+    value: 10.3.160.0/20
+  - key: Subnet-Test-Data-B
+    type: String
+    value: 10.3.176.0/20
+  - key: Subnet-Test-Mgmt-A
+    type: String
+    value: 10.3.8.0/21
+  - key: Subnet-Test-Mgmt-B
+    type: String
+    value: 10.3.208.0/21
+  - key: Subnet-Test-MainTgwAttach-A
+    type: String
+    value: 10.3.0.0/27
+  - key: Subnet-Test-MainTgwAttach-B
+    type: String
+    value: 10.3.0.32/27
+  ###### Static Prod VPC allocations ######
+  - key: VpcProdCidr
+    type: String
+    value: 10.4.0.0/16
+  - key: Subnet-Prod-Web-A
+    type: String
+    value: 10.4.16.0/20
+  - key: Subnet-Prod-Web-B
+    type: String
+    value: 10.4.32.0/20
+  - key: Subnet-Prod-App-A
+    type: String
+    value: 10.4.64.0/19
+  - key: Subnet-Prod-App-B
+    type: String
+    value: 10.4.96.0/19
+  - key: Subnet-Prod-Data-A
+    type: String
+    value: 10.4.160.0/20
+  - key: Subnet-Prod-Data-B
+    type: String
+    value: 10.4.176.0/20
+  - key: Subnet-Prod-Mgmt-A
+    type: String
+    value: 10.4.8.0/21
+  - key: Subnet-Prod-Mgmt-B
+    type: String
+    value: 10.4.208.0/21
+  - key: Subnet-Prod-MainTgwAttach-A
+    type: String
+    value: 10.4.0.0/27
+  - key: Subnet-Prod-MainTgwAttach-B
+    type: String
+    value: 10.4.0.32/27
+  ###### Static Central VPC allocations ######
+  - key: VpcCentralCidr
+    type: String
+    value: 10.1.0.0/16
+  - key: Subnet-Central-Web-A
+    type: String
+    value: 10.1.16.0/20
+  - key: Subnet-Central-Web-B
+    type: String
+    value: 10.1.32.0/20
+  - key: Subnet-Central-App-A
+    type: String
+    value: 10.1.64.0/19
+  - key: Subnet-Central-App-B
+    type: String
+    value: 10.1.96.0/19
+  - key: Subnet-Central-Data-A
+    type: String
+    value: 10.1.160.0/20
+  - key: Subnet-Central-Data-B
+    type: String
+    value: 10.1.176.0/20
+  - key: Subnet-Central-Mgmt-A
+    type: String
+    value: 10.1.8.0/21
+  - key: Subnet-Central-Mgmt-B
+    type: String
+    value: 10.1.208.0/21
+  - key: Subnet-Central-MainTgwAttach-A
+    type: String
+    value: 10.1.0.0/27
+  - key: Subnet-Central-MainTgwAttach-B
+    type: String
+    value: 10.1.0.32/27
 #####

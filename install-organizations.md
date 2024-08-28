@@ -28,6 +28,7 @@ Name the stack `AWSAccelerator-InstallerStack` and review the template’s param
 | **Log Archive Account Email** | Use the "Log Archive Account" email defined in the prerequisites. |
 | **Audit Account Email** | Use the "Security Account" email defined in the prerequisites. |
 | **Control Tower Environment** | Set this to "No" |
+| **Configuration Repository Location** | For new deployments this need to be set to S3 |
 
 Leave all other values as default, unless you have specific reasons to customize.
 
@@ -47,7 +48,7 @@ Leave all other values as default, unless you have specific reasons to customize
 
 # 3. Deploy the reference architecture
 
-The Landing Zone Accelerator on AWS solution deploys an AWS CodeCommit repository called `aws-accelerator-config`, along with six customizable YAML configuration files. The YAML files are pre-populated with a minimal configuration for the solution. The configuration files found in this repo's '[config](./config/)' should replace the files in the default AWS CodeCommit repository after adjusting environment specific configurations.
+The Landing Zone Accelerator on AWS solution deploys a S3 bucket named `aws-accelerator-config-<account>-<region>`, along with six customizable YAML configuration files. The YAML files are pre-populated with a minimal configuration for the solution. The configuration files found in this repo's '[config](./config/)' should replace the files in the default configuration S3 bucket after adjusting environment specific configurations.
 
 We recommend you read the LZA guidance on [using the configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/using-configuration-files.html), before continuing with the deployment of the reference architecture.
 
@@ -55,9 +56,15 @@ We recommend you go through every configuration file and confirm the default val
 
 ## 3.1 Prepare the reference architecture configuration files
 
-1. Clone the `aws-accelerator-config` AWS CodeCommit repository. You can follow the instructions on [setting up AWS CodeCommit with git](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-git-remote-codecommit.html) to clone the repo.
-2. Clone this repository (`landing-zone-accelerator-on-aws-for-tse-se`)
-3. Copy the contents from the `config` folder in the repository `landing-zone-accelerator-on-aws-for-tse-se` to your local `aws-accelerator-config` repo. You may be prompted to overwrite duplicate configs, such as accounts-config.yaml.
+1. Create a local directory named `aws-accelerator-config`
+  a) `mkdir aws-accelerator-config`
+2. Download the starting configurations from the configuration S3 bucket (`aws-accelerator-config-<account>-<region>`). The object key in the bucket is `zipped/aws-accelerator-config.zip`   
+    - To download the file using AWS CLI to your current local directory: `aws s3 cp s3://aws-accelerator-config-<account>-<region>/zipped/aws-accelerator-config.zip .`
+3. Unzip the configuration copied from S3  
+    - Bash: `unzip aws-accelerator-config.zip -d aws-accelerator-config/`  
+    - Powershell: `Expand-Archive -Path aws-accelerator-config.zip -DestinationPath aws-accelerator-config\`  
+4. Clone this repository (`landing-zone-accelerator-on-aws-for-tse-se`)
+5. Copy the contents from the `config` folder in the repository `landing-zone-accelerator-on-aws-for-tse-se` to your local `aws-accelerator-config` folder. You may be prompted to overwrite duplicate configs, such as accounts-config.yaml.
 
 ## 3.2 Prepare additional organizational units
 
@@ -71,7 +78,7 @@ You can run the [`setup-organizational-units`](./reference-artifacts/organizatio
 
 ## 3.3 Mandatory customization
 
-Using the IDE of your choice, in your local `aws-accelerator-config` repo, update the following values:
+Using the IDE of your choice, in your local `aws-accelerator-config` folder, update the following values:
 - replacements-config.yaml - This file contains global variables that can be referenced from all other configuration files. Review the value of each variable to confirm it is appropriate to your deployment. **Note: ** the passwords for the active directory accounts will be available via [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/).
 - accounts-config.yaml - Update the config email addresses to match the email addresses you assigned in the prerequisites section.
 
@@ -124,7 +131,7 @@ The shared network makes use of a contiguous CIDR. The is currently specified as
 | 10.7.4.0/22 | Perimeter | This range is allocated to the Perimeter VPC |
 | 10.7.8.0 - 10.255.255.255 |  | These are the remaining CIDRs from `10.0.0.0/8`. These are used used to checkout non-overlapping ranges for use with local Sandbox account VPC's. |
 
-You can choose to customize these ranges in the `replacements-config.yaml`, however take careful note when updating the config to also update subnet range, NACLs, Security Groups, Firewall rules and routing appropriately in `network-config.yaml`. 
+You can choose to customize these ranges in the `replacements-config.yaml`.
 
 ## 3.5 Copy assets to assets buckets
 
@@ -138,13 +145,44 @@ openssl req -newkey rsa:2048 -nodes -keyout example1-cert.key -out example1-cert
 openssl x509 -signkey example1-cert.key -in example1-cert.csr -req -days 1095 -out example1-cert.crt
 ```
 
+Example command to copy to S3
+```
+aws s3 cp example1-cert.crt  s3://aws-accelerator-assets-<account-id>-<home-region>/certs/example1-cert.crt
+aws s3 cp example1-cert.key  s3://aws-accelerator-assets-<account-id>-<home-region>/certs/example1-cert.key
+```
+
 You can also update the configuration to automatically request certificates from Amazon Certificate Manager (ACM). See the [CertificateConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/v1.6.2/classes/_aws_accelerator_config.CertificateConfig.html) documentation from LZA.
 
-## 3.6 Running the pipeline
+## 3.6 (Optional) Validate the configuration file
 
-- Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
-- Release a change manually to the `AWSAccelerator-Pipeline` pipeline.
-- Wait for the successful completion of the `AWSAccelerator-Pipeline` pipeline.
+We recommend that you familiarize yourself with the LZA developer tools to locally validate your configuration files
+
+To validate the configuration files you will need to download and build the [Landing Zone Accelerator code](https://github.com/awslabs/landing-zone-accelerator-on-aws).
+
+Instructions to run the configuration validation can be found in the [LZA Developer guide](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/developer-guide/scripts/#configuration-validator)
+
+## 3.7 Running the pipeline
+
+1. Zip your local configuration files and copy them to the configuration S3 bucket. Make sure the zip archive contains all files directly at the root of the archive, without the `aws-accelerator-config` top folder.
+
+    Bash (Linux/MacOS)
+    ```bash
+    cd aws-accelerator-config/
+    rm ../aws-accelerator-config.zip
+    zip -r ../aws-accelerator-config.zip . *
+    aws s3 cp ../aws-accelerator-config.zip s3://aws-accelerator-config-<account>-<region>/zipped/aws-accelerator-config.zip
+    ```
+
+    Powershell (Windows)
+    ```powershell
+    cd aws-accelerator-config\
+    rm ..\aws-accelerator-config.zip
+    Compress-Archive -Path .\ -DestinationPath ..\aws-accelerator-config.zip
+    aws s3 cp ../aws-accelerator-config.zip s3://aws-accelerator-config-<account>-<region>/zipped/aws-accelerator-config.zip
+    ```
+
+2. Release a change manually to the `AWSAccelerator-Pipeline` pipeline.
+3. Wait for the successful completion of the `AWSAccelerator-Pipeline` pipeline.
 
 # 4. Post deployment steps
 

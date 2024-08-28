@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.2-a] 2024-08-30
+### Added
+- feat(replacements): All CIDR ranges for VPC's, Subnets and IPAM have been moved to the replacements file. This simplifies customisation during deployment and also makes future changes for networking easier to identify. If you previously customized your CIDR ranges, when applying this change to an existing deployment, make sure to replace the CIDR ranges in replacement-config.yaml by the current values defined in your network-config.yaml file.
+
+### Changed
+- fix(scp): Modified LAM SCP to block additional APIs
+- feat(networking): Improvements to third-party reference artifacts documentation to deploy FortiGates.
+- fix(docs): Updated installation documentation to use S3 as the configuration source
+- feat(global-config): Enable all regions by default
+- fix(iam): Updated default configuration and documentation to deploy Managed Active Directory configuration instances in a post-deployment step
+- fix(scp): Updated Sandbox and Unclass SCPs to make them consistent with Sensistive
+- fix(iam-config): Add S3 GetObject policy to support SSM buckets
+
 ## [1.8.1-c] 2024-07-25
 ### Changed
 - fix(security-config): Updated alarms related to root use login activity. Removed duplicate and unused alarms and metrics.

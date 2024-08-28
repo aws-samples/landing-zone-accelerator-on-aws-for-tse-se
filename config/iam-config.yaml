@@ -13,6 +13,8 @@ policySets:
     policies:
       - name: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
         policy: iam-policies/boundary-policy.json
+      - name: "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
+        policy: iam-policies/ssm-s3-policy.json
   - deploymentTargets:
       accounts:
         - Management
@@ -34,6 +36,8 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
+          customerManaged:
+            - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
       - name: RDGW-Role
         instanceProfile: true
@@ -45,6 +49,8 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
+          customerManaged:
+            - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
       - name: Rsyslog-Role
         instanceProfile: true
@@ -56,6 +62,8 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - CloudWatchAgentServerPolicy
             - AmazonS3ReadOnlyAccess
+          customerManaged:
+            - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
   - deploymentTargets:
       accounts:
@@ -71,6 +79,8 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - CloudWatchAgentServerPolicy
             - AmazonS3ReadOnlyAccess
+          customerManaged:
+            - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: AWSAccelerator-Default-Boundary-Policy
 groupSets:
   - deploymentTargets:
@@ -125,63 +135,66 @@ managedActiveDirectories:
         - UnClass
     logs:
       groupName: /AWSAccelerator/MAD/{{MadDnsName}}
-    activeDirectoryConfigurationInstance:
-      instanceType: t3.large
-      vpcName: Central
-      subnetName: Central-App-A
-      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
-      securityGroupInboundSources:
-        - 10.1.0.0/16
-      instanceRole: RDGW-Role
-      userDataScripts:
-        - scriptName: JoinDomain
-          scriptFilePath: ad-config-scripts/Join-Domain.ps1
-        - scriptName: AWSQuickStart
-          scriptFilePath: ad-config-scripts/AWSQuickStart.psm1
-        - scriptName: ADGroupSetup
-          scriptFilePath: ad-config-scripts/AD-group-setup.ps1
-        - scriptName: ADUserSetup
-          scriptFilePath: ad-config-scripts/AD-user-setup.ps1
-        - scriptName: ADUserGroupSetup
-          scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
-        - scriptName: ADGroupGrantPermissionsSetup
-          scriptFilePath: ad-config-scripts/AD-group-grant-permissions-setup.ps1
-        - scriptName: ADConnectorPermissionsSetup
-          scriptFilePath: ad-config-scripts/AD-connector-permissions-setup.ps1
-        - scriptName: ConfigurePasswordPolicy
-          scriptFilePath: ad-config-scripts/Configure-password-policy.ps1
-      adGroups:
-        - aws-Provisioning
-        - aws-Billing
-      adPerAccountGroups:
-        - "*-Admin"
-        - "*-PowerUser"
-        - "*-View"
-      adConnectorGroup: ADConnector-grp
-      adPasswordPolicy:
-        history: 24
-        maximumAge: 90
-        minimumAge: 1
-        minimumLength: 14
-        complexity: true
-        reversible: false
-        failedAttempts: 6
-        lockoutDuration: 30
-        lockoutAttemptsReset: 30
-      adUsers:
-        - name: adconnector-user
-          email: {{ ActiveDirectoryConnectorEmail }}
-          groups:
-            - ADConnector-grp
-        - name: User1
-          email: {{ ActiveDirectoryUserEmail }}
-          groups:
-            - aws-Provisioning
-            - "*-View"
-            - "*-Admin"
-            - "*-PowerUser"
-            - AWS Delegated Administrators
-        - name: User2
-          email: {{ ActiveDirectoryReadonlyUserEmail }}
-          groups:
-            - "*-View"
+## Active Directory Configuration instance need to be deployed after the Managed AD deployment
+## See post-install instructions
+#    activeDirectoryConfigurationInstance:
+#      instanceType: t3.large
+#      vpcName: Central
+#      subnetName: Central-App-A
+#      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
+#      securityGroupInboundSources:
+#        - 10.1.0.0/16
+#      instanceRole: RDGW-Role
+#      userDataScripts:
+#        - scriptName: JoinDomain
+#          scriptFilePath: ad-config-scripts/Join-Domain.ps1
+#        - scriptName: AWSQuickStart
+#          scriptFilePath: ad-config-scripts/AWSQuickStart.psm1
+#        - scriptName: ADGroupSetup
+#          scriptFilePath: ad-config-scripts/AD-group-setup.ps1
+#        - scriptName: ADUserSetup
+#          scriptFilePath: ad-config-scripts/AD-user-setup.ps1
+#        - scriptName: ADUserGroupSetup
+#          scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
+#        - scriptName: ADGroupGrantPermissionsSetup
+#          scriptFilePath: ad-config-scripts/AD-group-grant-permissions-setup.ps1
+#        - scriptName: ADConnectorPermissionsSetup
+#            - "*-View"
+#          scriptFilePath: ad-config-scripts/AD-connector-permissions-setup.ps1
+#        - scriptName: ConfigurePasswordPolicy
+#          scriptFilePath: ad-config-scripts/Configure-password-policy.ps1
+#      adGroups:
+#        - aws-Provisioning
+#        - aws-Billing
+#      adPerAccountGroups:
+#        - "*-Admin"
+#        - "*-PowerUser"
+#        - "*-View"
+#      adConnectorGroup: ADConnector-grp
+#      adPasswordPolicy:
+#        history: 24
+#        maximumAge: 90
+#        minimumAge: 1
+#        minimumLength: 14
+#        complexity: true
+#        reversible: false
+#        failedAttempts: 6
+#        lockoutDuration: 30
+#        lockoutAttemptsReset: 30
+#      adUsers:
+#        - name: adconnector-user
+#          email: {{ ActiveDirectoryConnectorEmail }}
+#          groups:
+#            - ADConnector-grp
+#        - name: User1
+#          email: {{ ActiveDirectoryUserEmail }}
+#          groups:
+#            - aws-Provisioning
+#            - "*-View"
+#            - "*-Admin"
+#            - "*-PowerUser"
+#            - AWS Delegated Administrators
+#        - name: User2
+#          email: {{ ActiveDirectoryReadonlyUserEmail }}
+#          groups:
+## END

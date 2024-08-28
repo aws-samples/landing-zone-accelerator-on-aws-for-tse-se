@@ -251,6 +251,7 @@ awsConfig:
           description: Custom role to remediate EC2 instance profile permission
           inputParameters:
             AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+            CustomerManagedPolicies: "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
             ResourceId: RESOURCE_ID
           customRule:
             lambda:
@@ -279,6 +280,9 @@ awsConfig:
                 type: String
               - name: AWSManagedPolicies
                 value: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+                type: StringList
+              - name: CustomerManagedPolicies
+                value: "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
                 type: StringList
         - name: "{{ AcceleratorPrefix }}-elb-logging-enabled"
           identifier: ELB_LOGGING_ENABLED

@@ -163,18 +163,14 @@
       "Sid": "LAM",
       "Effect": "Deny",
       "Action": [
-        "lambda:AddPermission",
-        "lambda:CreateEventSourceMapping",
-        "lambda:CreateFunction",
-        "lambda:DeleteEventSourceMapping",
-        "lambda:DeleteFunction",
-        "lambda:DeleteFunctionConcurrency",
-        "lambda:PutFunctionConcurrency",
-        "lambda:RemovePermission",
-        "lambda:UpdateEventSourceMapping",
-        "lambda:UpdateFunctionCode",
-        "lambda:UpdateFunctionConfiguration",
-        "lambda:UpdateFunctionUrlConfig"
+        "lambda:Add*",
+        "lambda:Create*",
+        "lambda:Delete*",
+        "lambda:Put*",
+        "lambda:Remove*",
+        "lambda:Update*",
+        "lambda:Publish*",
+        "lambda:Invoke*"
       ],
       "Resource": ["arn:${PARTITION}:lambda:*:*:function:${ACCELERATOR_PREFIX}*"],
       "Condition": {

@@ -9,7 +9,8 @@
         "aws-marketplace:CreateP*",
         "aws-marketplace:DescribePri*",
         "aws-marketplace:Di*",
-        "aws-marketplace:ListP*"
+        "aws-marketplace:ListP*",
+        "aws-marketplace:Start*"
       ],
       "Resource": "*"
     },
