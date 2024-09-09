@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.2-b] 2024-09-10
+### Added
+- feat(docs): Updated architecture documentation and diagrams
+
+### Changed
+- feat(network): **This change will cause a disruption to ingress and egress traffic and therefore must be carefully planned to minimize disruption to workloads.** We have made the decision to move the network firewall north of the Perimeter-NAT subnets to enable two outcomes for customers. 1. Allow customers to deploy internet facing appliances in the Perimeter-NAT subnets directly, without the need for ALB/NLB, whilst still being protected by a boundary device. This requirement supports products that are expected to sit at the edge and have multiple inbound ports open to support their application, which is currently not support by ALB/NLB's. 2. Allow the edge boundary device to see the public address ranges of the connections being established to the perimeter account. In the previous pattern the network firewalls sat south of the ALB/NLBs causing them to see the private addresses of connections and requiring administrators to work with X-Forwarded-For headers to see the public IP addresses. With this change customers will see the public IP addresses and can directly use their own IP threat lists to control traffic into the perimeter. To implement this optional change customers will need to make the changes in two phases. Detailed instructions to make the changes can be found [here](./documentation/1-9-2b-nfw-update-instructions.md). **Note: the time of the disruption will based on performing two full pipeline runs, please factor this in when scheduling the change.**
+
 ## [1.9.2-a] 2024-08-30
 ### Added
 - feat(replacements): All CIDR ranges for VPC's, Subnets and IPAM have been moved to the replacements file. This simplifies customisation during deployment and also makes future changes for networking easier to identify. If you previously customized your CIDR ranges, when applying this change to an existing deployment, make sure to replace the CIDR ranges in replacement-config.yaml by the current values defined in your network-config.yaml file.

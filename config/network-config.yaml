@@ -129,10 +129,11 @@ centralNetworkServices:
             ipSets:
               name: HOME_NET
               definition:
-                - {{ VpcCentralCidr }}
-                - {{ VpcDevCidr }}
-                - {{ VpcTestCidr }}
-                - {{ VpcProdCidr }}
+                - "{{ VpcCentralCidr }}"
+                - "{{ VpcDevCidr }}"
+                - "{{ VpcTestCidr }}"
+                - "{{ VpcProdCidr }}"
+                - "{{ VpcPerimeterCidr }}"
             portSets:
               name: HOME_NET
               definition:
@@ -364,94 +365,73 @@ vpcs:
     defaultSecurityGroupRulesDeletion: true
     internetGateway: true
     routeTables:
-      - name: Perimeter-Tgw-A
+      - name: IGW-Ingress-Routes
+        gatewayAssociation: internetGateway
         routes:
-          - name: NfwRoute
-            destination: 0.0.0.0/0
-            type: networkFirewall
-            target: "{{ AcceleratorPrefix }}-firewall"
-            targetAvailabilityZone: a
-          - name: NfwRouteToNatA
+          - name: PerimeterNat-A
             destination: "{{ Subnet-Perimeter-Nat-A }}"
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: a
-          - name: NfwRouteToNatB
-            destination: "{{ Subnet-Perimeter-Nat-B }}"
-            type: networkFirewall
-            target: "{{ AcceleratorPrefix }}-firewall"
-            targetAvailabilityZone: b
-      - name: Perimeter-Tgw-B
-        routes:
-          - name: NfwRoute
-            destination: 0.0.0.0/0
-            type: networkFirewall
-            target: "{{ AcceleratorPrefix }}-firewall"
-            targetAvailabilityZone: b
-          - name: NfwRouteToNatA
-            destination: "{{ Subnet-Perimeter-Nat-A }}"
-            type: networkFirewall
-            target: "{{ AcceleratorPrefix }}-firewall"
-            targetAvailabilityZone: a
-          - name: NfwRouteToNatB
+          - name: PerimeterNat-B
             destination: "{{ Subnet-Perimeter-Nat-B }}"
             type: networkFirewall
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
       - name: Perimeter-A
+        routes: 
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Perimeter-B
+        routes: 
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Perimeter-Nat-A
+        routes: 
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: "{{ AcceleratorPrefix }}-firewall"
+            targetAvailabilityZone: a
+          - name: TgwRoute
+            destination: "{{ AcceleratorIpamSupernet }}"
+            type: transitGateway
+            target: Network-Main
+      - name: Perimeter-Nat-B
+        routes: 
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: "{{ AcceleratorPrefix }}-firewall"
+            targetAvailabilityZone: b
+          - name: TgwRoute
+            destination: "{{ AcceleratorIpamSupernet }}"
+            type: transitGateway
+            target: Network-Main
+      - name: Perimeter-Tgw-A
         routes:
-          - name: NatRoute
+          - name: NfwRoute
             destination: 0.0.0.0/0
             type: natGateway
             target: Nat-Perimeter-A
           - name: TgwRoute
-            destination: {{ AcceleratorIpamSupernet }}
+            destination: "{{ AcceleratorIpamSupernet }}"
             type: transitGateway
             target: Network-Main
-          - name: S3Gateway
-            type: gatewayEndpoint
-            target: s3
-          - name: DynamoDBGateway
-            type: gatewayEndpoint
-            target: dynamodb
-      - name: Perimeter-B
+      - name: Perimeter-Tgw-B
         routes:
-          - name: NatRoute
+          - name: NfwRoute
             destination: 0.0.0.0/0
             type: natGateway
             target: Nat-Perimeter-B
           - name: TgwRoute
-            destination: {{ AcceleratorIpamSupernet }}
+            destination: "{{ AcceleratorIpamSupernet }}"
             type: transitGateway
             target: Network-Main
-          - name: S3Gateway
-            type: gatewayEndpoint
-            target: s3
-          - name: DynamoDBGateway
-            type: gatewayEndpoint
-            target: dynamodb
-      - name: Perimeter-Nat-A
-        routes:
-          - name: NfwNatRoute
-            destination: {{ AcceleratorIpamSupernet }}
-            type: networkFirewall
-            target: "{{ AcceleratorPrefix }}-firewall"
-            targetAvailabilityZone: a
-          - name: IgwRoute
-            destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
-      - name: Perimeter-Nat-B
-        routes:
-          - name: NfwNatRoute
-            destination: {{ AcceleratorIpamSupernet }}
-            type: networkFirewall
-            target: "{{ AcceleratorPrefix }}-firewall"
-            targetAvailabilityZone: b
-          - name: IgwRoute
-            destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
     subnets:
       - name: Perimeter-A
         availabilityZone: a

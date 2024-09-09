@@ -18,6 +18,7 @@ Before proceeding with the update you should carefully review the release notes 
 - Review the [LZA release notes](https://github.com/awslabs/landing-zone-accelerator-on-aws/releases)
 - Review configuration changes to the [default configuration files](./config/) and determine which change you need to apply to your configuration
 - Review this configuration [CHANGELOG](CHANGELOG.md)
+- Review the [BREAKING CHANGE](BREAKING_CHANGE.md) documentation
 
 **Tip** To facilitate the identification of configuration changes between two releases of the configuration files, you can use the built-in comparison of GitHub. e.g. This link will show differences between the `v1.6.0-a` and `v1.6.1-a` tags: https://github.com/aws-samples/landing-zone-accelerator-on-aws-for-cccs-medium/compare/release/v1.6.0-a...release/v1.6.1-a
 

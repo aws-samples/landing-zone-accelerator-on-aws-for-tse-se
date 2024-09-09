@@ -151,6 +151,8 @@ The shared network makes use of a contiguous CIDR. The is currently specified as
 
 You can choose to customize these ranges in the `replacements-config.yaml`.
 
+If you intend to connect your on-premises environment to the TGW in the future, you need to make sure the ASN is unique. The default ASN is `65521`. If you need to update this edit the `transitGateways/asn` value in the `network-config.yaml`.
+
 ## 3.4 Copy assets to assets buckets
 
 The sample configuration file uses self-signed certificates to attach to Application Load Balancers. Valid certificates need to be copied to the S3 assets bucket of your management account. (e.g. `aws-accelerator-assets-<account-id>-<home-region>`)
