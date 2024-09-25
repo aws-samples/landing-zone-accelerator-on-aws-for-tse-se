@@ -613,12 +613,6 @@ cloudWatch:
           metricNamespace: CloudTrailMetrics
           metricName: UnencryptedFilesystemCreatedCount
           metricValue: "1"
-        - filterName: "{{ AcceleratorPrefix }}-IgnoreAuthorizationFailureMetric"
-          logGroupName: {{ CloudTrailLogGroup }}
-          filterPattern: "{($.errorCode=\"*UnauthorizedOperation\") || ($.errorCode=\"AccessDenied*\")}"
-          metricNamespace: CloudTrailMetrics
-          metricName: IgnoreAuthorizationFailureCount
-          metricValue: "1"
         - filterName: "{{ AcceleratorPrefix }}-IgnoreConsoleSignInWithoutMfaMetric"
           logGroupName: {{ CloudTrailLogGroup }}
           filterPattern: "{($.eventName=\"ConsoleLogin\") && ($.additionalEventData.MFAUsed !=\"Yes\")}"
@@ -847,17 +841,6 @@ cloudWatch:
           alarmDescription: Alarms when one or more API calls are made to create an Unencrypted filesystem (i.e. EFS) (in any account, any region of your AWS Organization).
           snsTopicName: SecurityHigh
           metricName: UnencryptedFilesystemCreatedCount
-          namespace: CloudTrailMetrics
-          comparisonOperator: GreaterThanOrEqualToThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Sum
-          threshold: 1
-          treatMissingData: notBreaching
-        - alarmName: "{{ AcceleratorPrefix }}-IGNORE-AWS-Authorization-Failure"
-          alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
-          snsTopicName: SecurityIgnore
-          metricName: IgnoreAuthorizationFailureCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
