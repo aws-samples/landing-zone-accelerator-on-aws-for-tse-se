@@ -137,17 +137,9 @@ By default reference architecture deploys a fully working shared network, isolat
 
 ### 3.3.1 Customizing the shared network
 
-The shared network makes use of a contiguous CIDR. The is currently specified as `10.0.0.0/8`. This is subdivided into 
+We recommend that customers start with the new IPAM schema. You can read more about the IPAM design in the [architecture design documentation](../doc-tse/architecture-doc/readme.md). To adopt this new pattern rename the [network-config.yaml.ipam](../config/network-config.yaml.ipam) to `network-config.yaml` and the [replacements-config.yaml.ipam](../config/replacements-config.yaml.ipam) to `replacements-config.yaml`.
 
-| CIDR range | Purpose | Notes |
-|---|---|---|
-| 10.1.0.0/16 | Central | This range is allocated to the central VPC. Note that `10.1.0.1/32` is reserved for DX connections. |
-| 10.2.0.0/16 | Development | This range is allocated to the Dev VPC |
-| 10.3.0.0/16 | Test | This range is allocated to the Test VPC |
-| 10.4.0.0/16 | Production | This range is allocated to the production VPC |
-| 10.7.0.0/22 | Endpoint | This range is allocated to the Endpoint VPC |
-| 10.7.4.0/22 | Perimeter | This range is allocated to the Perimeter VPC |
-| 10.7.8.0 - 10.255.255.255 |  | These are the remaining CIDRs from `10.0.0.0/8`. These are used used to checkout non-overlapping ranges for use with local Sandbox account VPC's. |
+The IPAM makes use of a contiguous CIDR for the entire solution. This is currently specified as `10.0.0.0/8` and is subdivided into pools, as per the schema defined in the architecture design document.
 
 You can choose to customize these ranges in the `replacements-config.yaml`.
 

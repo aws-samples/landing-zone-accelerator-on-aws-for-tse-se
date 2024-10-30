@@ -98,6 +98,34 @@ Following the guidance on [enabling AWS Cost Explorer](https://docs.aws.amazon.c
 
 If you are using the GitHub source for the LZA code, you will need to follow the prerequisite step to [store a github token in secrets manager](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites.html#create-a-github-personal-access-token-and-store-in-secrets-manager)
 
+## 1.6 Configure Private Marketplace
+A [private marketplace](https://aws.amazon.com/marketplace/features/privatemarketplace) controls which products users in your AWS account, such as business users and engineering teams, can procure from AWS Marketplace. It is built on top of AWS Marketplace, and enables your administrators to create and customize curated digital catalogs of approved independent software vendors (ISVs) and products that conform to their in-house policies. Users in your AWS account can find, buy, and deploy approved products from your private marketplace, and ensure that all available products comply with your organization’s policies and standards.
+
+With AWS Organizations, you can centralize management of all of your accounts, group your accounts into organizational units (OUs), and attach different access policies to each OU. You can create multiple private marketplace experiences that are associated with your entire organization, one or more OUs, or one or more accounts in your organization, each with its own set of approved products. Your AWS administrators can also apply company branding to each private marketplace experience with your company or team’s logo, messaging, and color scheme.
+
+The following are the minimum required steps to enable private marketplace.
+
+1. In the Organization Management account go here: https://aws.amazon.com/marketplace/privatemarketplace/create
+2. Select both checkboxes in the `Enable trusted access for AWS Organizations` section
+3. Click `Enable a Private Marketplace`, and wait for activation to complete
+4. Go to "Experiences" navigation menu, select `Create experience`
+5. Provide an Experience title (i.e. append `-PMP`), and click `Create Experience`. (This takes several minutes to complete)
+6.  Once successfully completed, click on the new experience
+7.  Click the `Settings` tab, 
+    1.  Change the color, so it is clear PMP is enabled for users
+    2.  Ensure the "Product requests" option is set to `Product requests off` 
+    3.  Click the `Live`option 
+    4.  Click `Save` at the bottom to apply the changes. (This takes several minutes to complete)
+8.  Once succesfully completed, click on the `Associated audience` tab
+9.  Click the `Add additional audience` button
+10. Select the root `Organization` OU, and click `Next`
+11. Review settings, and click `Associate with experience`. (This takes several minutes to complete)
+12. Go to the "Products" tab, then select the `All AWS Marketplace products` nested sub-tab
+13. Search Private Marketplace for any desired products and select
+14. Select "Add" in the top right
+    1.  Due to PMP provisioning delays, this sometimes fails when attempted immediately following enablement of PMP or if adding each product individually - retry after 20 minutes.
+15. While not used in the Organization account, you may need to subscribe to any subscriptions and accept the EULA for each selected product (you will also need to do the same in the account deploying a product)
+
 # 2. Deploy LZA
 
 We recommend you first read the [LZA guidance on troubleshooting and known issues](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html) prior to running the installation.

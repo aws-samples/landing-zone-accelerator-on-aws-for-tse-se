@@ -89,3 +89,11 @@ Verify that the Transit Gateway is configured in the Landing Zone Accelerator to
 3. Network security configuration permitting the required traffic to the workload ALBs and resources.
 
 Verify that any Network ACLs (NACLS) and security groups are configured to permit the required traffic from the ALB Forwarding resources in the Perimeter account.
+
+## How to use Amazon Inspector CIS scans with LZA
+Amazon Inspector is an automated vulnerability management service that continually scans Amazon Elastic Compute Cloud (EC2), AWS Lambda functions, and container images in Amazon ECR and within continuous integration and continuous delivery (CI/CD) tools, in near-real time for software vulnerabilities and unintended network exposure.
+
+As of LZA v1.9.2, the ability to enable Inspector using LZA configuration is not yet supported, so it must be configured manually. Prior to manually enabling using the instructions [here](https://docs.aws.amazon.com/inspector/latest/user/managing-multiple-accounts.html), note the following:
+- These VPC Endpoints are needed: (ec2messages, inspector2, s3, ssm, ssmmessages). Ensure these are listed in the network-config.yaml
+- If all egress traffic is denied, and you are using a strict VPC Endpoint Policy, ensure these 2 buckets are accessible: (inspector2-oval-prod-ca-central-1, cis-datasets-prod-yul-5e0c95e). Note the region identifiers may need to change.
+- If ssmInventoryConfig is enabled, there may be a conflict with the deployment of the AWS-GatherSoftwareInventory SSM association (deployed by both the LZA setting, and Inspector). This currently happens when `"Automatically activate Inspector for new member accounts"` is configured. Disable this setting, and manually activate after new accounts are created.

@@ -273,7 +273,8 @@
         "payments:GetPaymentStatus",
         "payments:ListPaymentPreferences",
         "tax:ListTaxRegistrations",
-        "sustainability:*"
+        "sustainability:*",
+        "quicksight:DescribeAccountSubscription"
       ],
       "Resource": "*",
       "Condition": {

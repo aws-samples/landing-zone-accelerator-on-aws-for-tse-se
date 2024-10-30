@@ -1,0 +1,96 @@
+######
+## This file contains global replacements variable that can re-used accross the configuration files
+## Every value should be reviewed and properly customized as part of your initial installation
+## Refer to the documentation for available options:
+## https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html#parameter-store-reference-variable
+## https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/latest/classes/_aws_accelerator_config.ParameterReplacementConfigV2.html
+######
+globalReplacements:
+  # Accelerator Prefix
+  - key: AcceleratorPrefix
+    type: String
+    value: AWSAccelerator
+  # Home Region
+  - key: AcceleratorHomeRegion
+    type: String
+    value: ca-central-1
+  # Security notification emails
+  - key: SecurityHigh
+    type: String
+    value: <notify-high>@example.com
+  - key: SecurityMedium
+    type: String
+    value: <notify-medium>@example.com
+  - key: SecurityLow
+    type: String
+    value: <notify-low>@example.com
+  - key: SecurityIgnore
+    type: String
+    value: <notify-ignore>@example.com
+  # Budget notification emails
+  - key: BudgetEmail
+    type: String
+    value: <budget-alert>@example.com
+  # Name of CloudWatch log group that centralizes CloudTrail logs. Referenced by CloudWatch metrics and alarms
+  - key: CloudTrailLogGroup
+    type: String
+    value: aws-accelerator-cloudtrail-logs # UPDATE If using ControlTower change this to 'aws-controltower/CloudTrailLogs'
+  # Managed Active Directory settings
+  - key: MadDnsName
+    type: String
+    value: example.local
+  - key: MadNetbiosDomainName
+    type: String
+    value: example
+  - key: ActiveDirectoryConnectorEmail
+    type: String
+    value: example-adconnector-user@example.com
+  - key: ActiveDirectoryUserEmail
+    type: String
+    value: example-user1@example.com
+  - key: ActiveDirectoryReadonlyUserEmail
+    type: String
+    value: example-user2@example.com
+  ###### IPAM ######
+  - key: sandboxCidr
+    type: String
+    value: 192.168.0.0/22
+  - key: AcceleratorIpamSupernet
+    type: String
+    value: 10.0.0.0/8
+  - key: homeRegionCidr
+    type: String
+    value: 10.0.0.0/10
+  - key: homeRegionCoreServicesCidr
+    type: String
+    value: 10.0.0.0/13
+  - key: homeRegionCoreServicesDevCidr
+    type: String
+    value: 10.0.0.0/15
+  - key: homeRegionCoreServicesTestCidr
+    type: String
+    value: 10.2.0.0/15
+  - key: homeRegionCoreServicesProdCidr
+    type: String
+    value: 10.4.0.0/15
+  - key: homeRegionWorkloadCidrA
+    type: String
+    value: 10.8.0.0/13
+  - key: homeRegionWorkloadCidrB
+    type: String
+    value: 10.16.0.0/12
+  - key: homeRegionWorkloadDevCidr
+    type: String
+    value: 10.8.0.0/13
+  - key: homeRegionWorkloadTestCidr
+    type: String
+    value: 10.16.0.0/13
+  - key: homeRegionWorkloadProdCidr
+    type: String
+    value: 10.24.0.0/13
+  ###### Reserved IP addresses ######
+  ###### OnPremisesPrefixList is used to define which on-premises CIDR range can access managed cloud instances ######
+  ###### If you wish to add multiple on-premise ranges, you can add them to the network-config.yaml under prefixLists/onpremises-prefix-list/entries ######
+  - key: OnPremisesPrefixList
+    type: String
+    value: 10.1.0.1/32

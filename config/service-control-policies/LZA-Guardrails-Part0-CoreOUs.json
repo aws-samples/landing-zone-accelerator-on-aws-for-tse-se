@@ -141,7 +141,7 @@
         "securityhub:DeleteMembers",
         "securityhub:InviteMembers",
         "securityhub:CreateMembers",
-        "securityhub:DisableSecurityHub",
+        "securityhub:Disable*",
         "securityhub:Disassociate*",
         "securityhub:DeleteInsight",
         "securityhub:DeleteActionTarget",

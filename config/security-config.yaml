@@ -48,6 +48,11 @@ centralSecurityServices:
     enable: false
     excludeRegions:
       - ca-west-1 # Does not support Audit Manager
+      - eu-west-3 # Does not support Audit Manager
+      - ap-northeast-2 # Does not support Audit Manager
+      - ap-northeast-3 # Does not support Audit Manager
+      - eu-north-1 # Does not support Audit Manager
+      - sa-east-1 # Does not support Audit Manager
     defaultReportsConfiguration:
       enable: true
       destinationType: S3
@@ -67,19 +72,14 @@ centralSecurityServices:
           - IAM.1
           - EC2.10
           - Lambda.4
+      - name: CIS AWS Foundations Benchmark v3.0.0
+        enable: true
+      - name: NIST Special Publication 800-53 Revision 5
+        enable: true
       - name: PCI DSS v3.2.1
-        enable: true
-        controlsToDisable:
-          - PCI.IAM.3
-          - PCI.S3.3
-          - PCI.EC2.3
-          - PCI.Lambda.2
+        enable: false
       - name: CIS AWS Foundations Benchmark v1.2.0
-        enable: true
-        controlsToDisable:
-          - CIS.1.20
-          - CIS.1.22
-          - CIS.2.6
+        enable: false
     logging:
       cloudWatch:
         enable: true
@@ -323,8 +323,6 @@ awsConfig:
       rules:
         - name: "{{ AcceleratorPrefix }}-sagemaker-notebook-instance-kms-key-configured"
           identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
-        - name: "{{ AcceleratorPrefix }}-wafv2-logging-enabled"
-          identifier: WAFV2_LOGGING_ENABLED
         - name: "{{ AcceleratorPrefix }}-dynamodb-in-backup-plan"
           identifier: DYNAMODB_IN_BACKUP_PLAN
         - name: "{{ AcceleratorPrefix }}-sagemaker-endpoint-configuration-kms-key-configured"
@@ -333,14 +331,8 @@ awsConfig:
           identifier: EBS_IN_BACKUP_PLAN
         - name: "{{ AcceleratorPrefix }}-rds-in-backup-plan"
           identifier: RDS_IN_BACKUP_PLAN
-        - name: "{{ AcceleratorPrefix }}-elb-acm-certificate-required"
-          complianceResourceTypes:
-            - AWS::ElasticLoadBalancing::LoadBalancer
-          identifier: ELB_ACM_CERTIFICATE_REQUIRED
         - name: "{{ AcceleratorPrefix }}-securityhub-enabled"
           identifier: SECURITYHUB_ENABLED
-        - name: "{{ AcceleratorPrefix }}-ec2-managedinstance-patch-compliance-status-check"
-          identifier: EC2_MANAGEDINSTANCE_PATCH_COMPLIANCE_STATUS_CHECK
         - name: "{{ AcceleratorPrefix }}-internet-gateway-authorized-vpc-only"
           complianceResourceTypes:
             - AWS::EC2::InternetGateway
@@ -349,12 +341,6 @@ awsConfig:
           complianceResourceTypes:
             - AWS::DynamoDB::Table
           identifier: DYNAMODB_TABLE_ENCRYPTED_KMS
-        - name: "{{ AcceleratorPrefix }}-acm-certificate-expiration-check"
-          inputParameters:
-            daysToExpiration: "90"
-          identifier: ACM_CERTIFICATE_EXPIRATION_CHECK
-        - name: "{{ AcceleratorPrefix }}-alb-waf-enabled"
-          identifier: ALB_WAF_ENABLED
         - name: "{{ AcceleratorPrefix }}-guardduty-non-archived-findings"
           inputParameters:
             daysHighSev: "1"
@@ -377,48 +363,16 @@ awsConfig:
         excludedRegions:
           - ap-northeast-3
       rules:
-        - name: "{{ AcceleratorPrefix }}-cloudtrail-enabled"
-          identifier: CLOUD_TRAIL_ENABLED
         - name: "{{ AcceleratorPrefix }}-cloudtrail-security-trail-enabled"
           identifier: CLOUDTRAIL_SECURITY_TRAIL_ENABLED
-        - name: "{{ AcceleratorPrefix }}-cloudwatch-alarm-action-check"
-          complianceResourceTypes:
-            - AWS::CloudWatch::Alarm
-          inputParameters:
-            alarmActionRequired: "TRUE"
-            insufficientDataActionRequired: "TRUE"
-            okActionRequired: "FALSE"
-          identifier: CLOUDWATCH_ALARM_ACTION_CHECK
-        - name: "{{ AcceleratorPrefix }}-cw-loggroup-retention-period-check"
-          identifier: CW_LOGGROUP_RETENTION_PERIOD_CHECK
-        - name: "{{ AcceleratorPrefix }}-db-instance-backup-enabled"
-          identifier: DB_INSTANCE_BACKUP_ENABLED
         - name: "{{ AcceleratorPrefix }}-ec2-instance-detailed-monitoring-enabled"
           complianceResourceTypes:
             - AWS::EC2::Instance
           identifier: EC2_INSTANCE_DETAILED_MONITORING_ENABLED
-        - name: "{{ AcceleratorPrefix }}-elb-cross-zone-load-balancing-enabled"
-          complianceResourceTypes:
-            - AWS::ElasticLoadBalancing::LoadBalancer
-          identifier: ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED
-        - name: "{{ AcceleratorPrefix }}-incoming-ssh-disabled"
-          identifier: INCOMING_SSH_DISABLED
         - name: "{{ AcceleratorPrefix }}-ec2-instances-in-vpc"
           complianceResourceTypes:
             - AWS::EC2::Instance
           identifier: INSTANCES_IN_VPC
-        - name: "{{ AcceleratorPrefix }}-restricted-incoming-traffic"
-          inputParameters:
-            blockedPort1: "20"
-            blockedPort2: "21"
-            blockedPort3: "3389"
-            blockedPort4: "3306"
-            blockedPort5: "4333"
-          identifier: RESTRICTED_INCOMING_TRAFFIC
-        - name: "{{ AcceleratorPrefix }}-s3-bucket-versioning-enabled"
-          complianceResourceTypes:
-            - AWS::S3::Bucket
-          identifier: S3_BUCKET_VERSIONING_ENABLED
         - name: "{{ AcceleratorPrefix }}-vpc-sg-open-only-to-authorized-ports"
           inputParameters:
             authorizedTcpPorts: "443"
@@ -473,8 +427,6 @@ awsConfig:
           complianceResourceTypes:
             - AWS::EC2::Volume
           identifier: EC2_VOLUME_INUSE_CHECK
-        - name: "{{ AcceleratorPrefix }}-elasticache-redis-cluster-automatic-backup-check"
-          identifier: ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK
         - name: "{{ AcceleratorPrefix }}-emr-kerberos-enabled"
           identifier: EMR_KERBEROS_ENABLED
 cloudWatch:

@@ -36,6 +36,7 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
+            - AmazonInspector2ManagedCispolicy
           customerManaged:
             - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
@@ -49,6 +50,7 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
+            - AmazonInspector2ManagedCispolicy
           customerManaged:
             - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"

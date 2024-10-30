@@ -141,7 +141,7 @@
         "securityhub:DeleteMembers",
         "securityhub:InviteMembers",
         "securityhub:CreateMembers",
-        "securityhub:DisableSecurityHub",
+        "securityhub:Disable*",
         "securityhub:DisassociateFromMasterAccount",
         "securityhub:DeleteInsight",
         "securityhub:DisassociateMembers",

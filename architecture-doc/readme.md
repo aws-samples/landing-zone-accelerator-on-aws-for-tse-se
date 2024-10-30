@@ -71,7 +71,7 @@ This document is intended to outline the technical measures that are delivered b
   - [5.9. Systems Manager Inventory](#59-systems-manager-inventory)
   - [5.10. Other Services](#510-other-services)
 - [6. Networking](#6-networking)
-  - [6.1. Overview](#61-overview)
+  - [6.1. IP Address Management](#61-ip-address-management)
   - [6.2. Perimeter](#62-perimeter)
   - [6.3. Shared Network](#63-shared-network)
     - [6.3.1. Transit Gateway](#631-transit-gateway)
@@ -606,8 +606,8 @@ The primary dashboard for Operators to assess the security posture of the AWS fo
 The Trusted Secure Enclaves Sensitive Edition Architecture recommends that the current 3 Security Hub frameworks be enabled, specifically:
 
 - [AWS Foundational Security Best Practices v1.0.0][found]
-- [PCI DSS v3.2.1][pci]
-- [CIS AWS Foundations Benchmark v1.2.0][cis]
+- [NIST Special Publication 800-53 Revision 5][nist]
+- [CIS AWS Foundations Benchmark v3.0.0][cis]
 
 These frameworks will perform checks against the accounts via Config Rules that are evaluated against the AWS Config resources in scope. See the above links for a definition of the associated controls.
 
@@ -630,8 +630,6 @@ The [optional rsyslog servers](https://github.com/aws-samples/landing-zone-accel
 
 # 6. Networking
 
-## 6.1. Overview
-
 The reference architecture has been specifically designed to deliver a prescriptive default network configuration, whilst also offering the flexibility to customize the network to meet the specific requirements of the workloads that will be run within the solution. This section covers both the default configuration, and how the solution has been designed to allow other networking patterns to be implemented.
 
 The reference architecture networking is built on a principle of centralized on-premises and internet ingress/egress, while enforcing data plane isolation between workloads in different environments. Connectivity to on-premises environments, internet egress, shared resources and AWS APIs are mediated at a central point of ingress/egress via the use of a [Transit Gateway][aws_tgw]. Consider the following overall network diagram:
@@ -639,6 +637,68 @@ The reference architecture networking is built on a principle of centralized on-
 ![Mandatory Accounts](./images/network/high-level-network-Overview.drawio.png)
 
 All functional accounts use RAM-shared networking infrastructure as depicted above. The workload VPCs (Dev, Test, Prod, etc) are hosted in the Shared Network account and made available to the appropriate accounts based on their OU in the organization.
+
+## 6.1 IP Address Management
+
+## 6.1.1 IP Address Management Schema
+
+To support this flexible network deployment model, it is critical to consider a well structured IP address management (IPAM) schema, allowing for simple and strong isolation between core services, environments and workloads, whilst also providing the scalability, resilience and flexibility needed by organizations. The reference architecture provides an IP address management design to support these goals. 
+
+![IPAM pool structure](./images/ipam/ipam-high-level-structure.drawio.png)
+
+The structure described in the diagram allows teams to:
+
+- support additional regions for disaster recovery and business continuity
+- draw a clear distinction between organization wide networks used for landing zone services and those used for workload networks
+- allow environments to be easily summarized by CIDR, enabling simple firewall and routing control to enforce isolation
+
+To enforce the structured allocation of CIDR ranges across the reference architecture, the solution makes use of [Amazon VPC IP Address Manager (IPAM)](https://docs.aws.amazon.com/vpc/latest/ipam/what-it-is-ipam.html) to create [pools](https://docs.aws.amazon.com/vpc/latest/ipam/how-it-works-ipam.html) which allow the allocation of non-overlapping CIDR ranges for VPC's. Below are tables that describe the IPAM pools and their purpose. These pools, are defined in the [network-config.yaml.ipam](../../config/network-config.yaml.ipam).
+
+## Global Ipam Pools
+| Pool name | Purpose |
+|---|---|
+| {{ AcceleratorPrefix }}-sandbox-pool | The {{ AcceleratorPrefix }} Sandbox Pool is used to track sandbox address allocations for visibility. The allocations in this pool are purposely overlapping, as the sandbox networks are isolated to the local sandbox account they are created for, and never connected to other networks in the accelerator. |
+| {{ AcceleratorPrefix }}-supernet | The {{ AcceleratorPrefix }} Supernet Pool defines a contiguous CIDR supernet to be used for all AWS resources across the entire accelerator deployment, except sandbox networks which are purposely isolated. |
+
+## Regional Ipam Pools
+| Pool name | Purpose |
+|---|---|
+| {{ AcceleratorPrefix }}-home-region-pool | The {{ AcceleratorPrefix }} Home Region Pool is used for all CIDR ranges (e.g. core, dev, test, prod etc) used within the home region. The home region pool has spare address space to allow customers to add in additional environments or extend the existing environments. |
+
+##Accelerator Core Services Pools
+| Pool name | Purpose |
+|---|---|
+| {{ AcceleratorPrefix }}-home-region-core-services-pool | The {{ AcceleratorPrefix }} home region core services pool is used for all core services that are established and maintained by the accelerator administrators. For example, the endpoint, perimeter and central VPC's. The home region core services pool has spare address space to allow customers to add in additional environments or extend the existing environments. |
+| {{ AcceleratorPrefix }}-home-region-core-services-dev-pool" | The {{ AcceleratorPrefix }} Home Region Core Services Dev Pool is currently unused within the accelerator. However this pool is created to allow the accelerator administrators to build their own Dev networks for the services they wish to provide beyond the default accelerator capabilities. This will allow the administrator of the landing zone to utilise their own SDLC across Dev, Test and Prod for core services. |
+| {{ AcceleratorPrefix }}-home-region-core-services-test-pool | The {{ AcceleratorPrefix }} Home Region Core Services Test Pool is currently unused within the accelerator. However this pool is created to allow the accelerator administrators to build their own Test networks for the services they wish to provide beyond the default accelerator capabilities. This will allow the administrator of the landing zone to utilise their own SDLC across Dev, Test and Prod for core services. |
+| {{ AcceleratorPrefix }}-home-region-core-services-prod-pool | The {{ AcceleratorPrefix }} Home Region Core Services Prod Pool is used to provide network addresses for shared core services, for example the perimeter, endpoint and central VPCs. |
+
+## Accelerator Workload Pools
+| Pool name | Purpose |
+|---|---|
+| {{ AcceleratorPrefix }}-home-region-workload-pool | The {{ AcceleratorPrefix }} Home Region Workload Pool is used for all workload environments in the home region, e.g. Dev, Test and Production. |
+| {{ AcceleratorPrefix }}-home-region-workload-dev-pool | The {{ AcceleratorPrefix }} Home Region Workload Dev Pool is used for all development workload environments in the home region. |
+| {{ AcceleratorPrefix }}-home-region-workload-test-pool | The {{ AcceleratorPrefix }} Home Region Workload Test Pool is used for all test workload environments in the home region. |
+| {{ AcceleratorPrefix }}-home-region-workload-prod-pool | The {{ AcceleratorPrefix }} Home Region Workload Prod Pool is used for all production workload environments in the home region. ||
+
+The AWS IPAM pools for Dev, Test and Prod for both workload and core services, have been configured to auto-register CIDR ranges from any VPCs that are created in the environment. This enables the solution administrators to have a holistic picture of all VPC CIDR allocations across their environment.
+
+## 6.1.2 IP Address Management CIDR allocation strategies
+
+When thinking about the allocation of CIDR ranges to the IPAM schema defined above there are typically two high level approaches. The decision on which strategy to adopt becomes even more important for customers who wish to a adopt a hub-and-spoke network model to introduce further isolation with any environment e.g. Dev, test, Prod. More information to help understand network designs can be found [here](https://aws.amazon.com/blogs/networking-and-content-delivery/designing-hyperscale-amazon-vpc-networks/).
+
+1. Allocate a large CIDR range, for example a "/8" that does not overlap with on-premises environments
+2. Allocate two smaller ranges, for example "/20" that do not overlap with on-premises environments
+
+The architecture that is descried in this design document, recommends the first option, to allocate a large CIDR range, for example a "/8" that does not overlap with on-premises ranges. This leaves customers with the most flexibility allowing them to adopt different network architectures in the future.
+
+However, we understand that for many customers it is not possible to allocate a large non-overlapping range, as it is already consumed across their on-premises estates. In this case, option 2 allows customers to have some portion of the workload subnets remain routable, whilst re-using the second CIDR across workload VPC allocations. When services wish to communicate between each other or with on-premises services, they do so via private NAT Gateways and load balancers that exist within the workloads routable subnets. However, this approach brings with it some trade-offs that need to be understood. Further details on adopting this model can be seen [here](../../documentation/alternative-ipam-patterns.md).
+
+For customers that adopt the recommended approach to allocate a large non-overlapping range, see the example below of how the CIDR can carved up across the IPAM schema.
+
+![IPAM CIDR allocation](./images/ipam/ipam-base-pools.drawio.png)
+
+When customers are deciding on the size of address space to allocate, we recommend doing forecasting to understand the scale of the solution. How many teams will be on-boarded, what size networks do they need for their workloads, how many accounts will each team have per team/project etc? With this information it is possible to forecast the amount of CIDR space required across the solution when it is allocated, and make sure the platforms CIDR range is large to support it.
 
 ## 6.2. Perimeter
 
@@ -888,9 +948,9 @@ These services must still be appropriately configured. This includes ensuring bo
 [gd-org]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html
 [config]: https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html
 [config-org]: https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-config.html
-[found]: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html
-[pci]: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-pci-controls.html
-[cis]: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html
+[found]: https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
+[nist]: https://docs.aws.amazon.com/securityhub/latest/userguide/nist-standard.html
+[cis]: https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html
 [ssm]: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html
 
 ---
