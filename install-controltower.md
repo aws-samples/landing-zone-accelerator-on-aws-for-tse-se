@@ -64,14 +64,23 @@ We recommend you go through every configuration file and confirm the default val
 ## 3.2 Mandatory customization
 
 Using the IDE of your choice, in your local `aws-accelerator-config` folder, update the following values:
-- replacements-config.yaml - This file contains global variables that can be referenced from all other configuration files. Review the value of each variable to confirm it is appropriate to your deployment. **Note: ** the passwords for the active directory accounts will be available via [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/).
+- replacements-config.yaml - This file contains global variables that can be referenced from all other configuration files. Review the value of each variable to confirm it is appropriate to your deployment. **Note:** the passwords for the active directory accounts will be available via [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/).
+  - per [3.3.1 Customizing the shared network](#331-customizing-the-shared-network), this will be either "replacements-config.yaml" or "replacements-config.yaml.ipam"
 - accounts-config.yaml - Update the config email addresses to match the email addresses you assigned in the prerequisites section.
 
 ### 3.2.1 Changing the home Region
 
 If you are changing the home region from *ca-central-1* to  different region, you need to make the following configuration file modifications.
 
-- global-config.yaml - **homeRegion: &HOME_REGION ca-central-1** must be updated from *ca-central-1* to the region you are using as your home region, e.g. *homeRegion: &HOME_REGION eu-west-2*
+- global-config.yaml: Must be updated from *ca-central-1* to the region you are using as your home region, e.g. From
+
+    ~~~yaml
+    homeRegion: &HOME_REGION ca-central-1
+    ~~~
+  to
+    ~~~yaml
+    homeRegion: &HOME_REGION eu-west-2
+    ~~~
 - global-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
 - security-config.yaml - all references to your home region in any **excludeRegions** blocks must be deleted and *ca-central-1* must be added.
 - customizations-config.yaml - Update references to *ca-central-1* to the region you are using as your home region
@@ -103,7 +112,7 @@ Some configuration elements need to be updated when using ControlTower
 - global-config.yaml 
   * Update `managementAccountAccessRole` value to `AWSControlTowerExecution`
   * Update `controlTower` to `enable: true`
-  * Uncomment the `landingZone` block
+  * Uncomment the `landingZone` block (only if it is a new Organization with zero accounts other than the Management Account)
   * Under `logging/cloudtrail/organizationTrailSettings` set `managementEvents` to `false`, an Organizational Trail was already setup by CloudTrail.
 - organization-config.yaml 
   * Uncomment the proper configuration block under the `AWSAccelerator-Guardrails-Sensitive-Part-1` configuration to have the following configuration
