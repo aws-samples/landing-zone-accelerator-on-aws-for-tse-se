@@ -652,7 +652,7 @@ The structure described in the diagram allows teams to:
 - draw a clear distinction between organization wide networks used for landing zone services and those used for workload networks
 - allow environments to be easily summarized by CIDR, enabling simple firewall and routing control to enforce isolation
 
-To enforce the structured allocation of CIDR ranges across the reference architecture, the solution makes use of [Amazon VPC IP Address Manager (IPAM)](https://docs.aws.amazon.com/vpc/latest/ipam/what-it-is-ipam.html) to create [pools](https://docs.aws.amazon.com/vpc/latest/ipam/how-it-works-ipam.html) which allow the allocation of non-overlapping CIDR ranges for VPC's. Below are tables that describe the IPAM pools and their purpose. These pools, are defined in the [network-config.yaml.ipam](../../config/network-config.yaml.ipam).
+To enforce the structured allocation of CIDR ranges across the reference architecture, the solution makes use of [Amazon VPC IP Address Manager (IPAM)](https://docs.aws.amazon.com/vpc/latest/ipam/what-it-is-ipam.html) to create [pools](https://docs.aws.amazon.com/vpc/latest/ipam/how-it-works-ipam.html) which allow the allocation of non-overlapping CIDR ranges for VPC's. Below are tables that describe the IPAM pools and their purpose. These pools, are defined in the [network-config.yaml.ipam](/config/network-config.yaml.ipam).
 
 ## Global Ipam Pools
 | Pool name | Purpose |
@@ -692,7 +692,7 @@ When thinking about the allocation of CIDR ranges to the IPAM schema defined abo
 
 The architecture that is descried in this design document, recommends the first option, to allocate a large CIDR range, for example a "/8" that does not overlap with on-premises ranges. This leaves customers with the most flexibility allowing them to adopt different network architectures in the future.
 
-However, we understand that for many customers it is not possible to allocate a large non-overlapping range, as it is already consumed across their on-premises estates. In this case, option 2 allows customers to have some portion of the workload subnets remain routable, whilst re-using the second CIDR across workload VPC allocations. When services wish to communicate between each other or with on-premises services, they do so via private NAT Gateways and load balancers that exist within the workloads routable subnets. However, this approach brings with it some trade-offs that need to be understood. Further details on adopting this model can be seen [here](../../documentation/alternative-ipam-patterns.md).
+However, we understand that for many customers it is not possible to allocate a large non-overlapping range, as it is already consumed across their on-premises estates. In this case, option 2 allows customers to have some portion of the workload subnets remain routable, whilst re-using the second CIDR across workload VPC allocations. When services wish to communicate between each other or with on-premises services, they do so via private NAT Gateways and load balancers that exist within the workloads routable subnets. However, this approach brings with it some trade-offs that need to be understood. Further details on adopting this model can be seen [here](/documentation/alternative-ipam-patterns.md).
 
 For customers that adopt the recommended approach to allocate a large non-overlapping range, see the example below of how the CIDR can carved up across the IPAM schema.
 

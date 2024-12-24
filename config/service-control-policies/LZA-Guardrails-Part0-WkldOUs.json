@@ -60,14 +60,33 @@
     {
       "Sid": "RUL",
       "Effect": "Deny",
-      "Action": ["config:PutConfigRule", "config:DeleteConfigRule", "config:DeleteEvaluationResults"],
-      "Resource": ["arn:${PARTITION}:config:*:*:config-rule/*"],
+      "Action": ["config:PutConfigRule", "config:DeleteConfigRule", "config:DeleteEvaluationResults", "config:UntagResource"],
+      "Resource": "*",
       "Condition": {
+        "StringEquals": {
+					"aws:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+				},
         "ArnNotLike": {
           "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },
+		{
+			"Sid": "RULTAG",
+			"Effect": "Deny",
+			"Action": [
+				"config:TagResource"
+			],
+			"Resource": "*",
+			"Condition": {
+				"StringEquals": {
+					"aws:RequestTag/Accelerator": "${ACCELERATOR_PREFIX}"
+				},
+				"ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+        }
+			}
+		},
     {
       "Effect": "Deny",
       "Action": [

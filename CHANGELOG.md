@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.11.0-a] 2024-12-27
+
+### Added
+
+- feat(global-config): We have added tagging on all LZA provisioned resources that support tagging. The tag key is Accelerator and the key is set to the value provides to `AcceleratorPrefix` in the replacements-config.yaml.
+- feat(config rule): Created a new AWS Config rule to detect IMDSv1 and auto-remediate to IMDSv2. IMPORTANT: Before enabling, ensure that existing running software is compatible with IMDSv2. See here https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html#instance-metadata-transition-to-version-2 
+- feat(security): Added Accelerator tags to all AWS Config Rules. Modified `RUL` SCP to Deny AWS Config actions on Accelerator tagged rules only. This allow individual workload accounts administrators to create and manage their own AWS Config Rules while protecting acclerator deployed rules.
+
+### Changed
+
+- feat(security): removed noisy CloudWatch alarms and supporting metric filters to align with AWS Security Hub recommendations. https://docs.aws.amazon.com/securityhub/latest/userguide/controls-to-disable.html#controls-to-disable-cloudwatch-alarms
+- fix(security-config): We have updated the `"{{ AcceleratorPrefix }}-ec2-instance-profile-permission"` AWS Config rule to attach additional policies required to support encrypted logging of AWS SSM Sessions Manager. This fix will now allow users with custom EC2 roles to make use of sessions manager without needing to manually add additional policies.
+- fix(security-config): Updated Sensitive SCP to view CloudTrail entries in Global Region
+
+
 ## [1.10.0-a] 2024-10-31
 ### Added
 - feat(network-config): We have released a new IPAM schema and two new CIDR allocation strategies. This change has been made to offer customers more flexibility to adopt different network patterns in the future, such as hub-and-spoke and hybrid models. You can read about the new changes in the [design documentation](./architecture-doc/readme.md) for the solution. The deployment instructions now contain details on how to implement this new model. Please note, it is not possible for existing deployments to update to use this new model, as it would require a complete redeployment of all VPC's. 

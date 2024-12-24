@@ -10,7 +10,7 @@ The architecture builds on the IPAM model that the reference architecture define
 
 A second CIDR range that is non-overlapping with on-premises must then be allocated for VPC's. This range will be re-used for every VPC that is deployed. This is specifically done to allow workloads to route through the web subnets to on-premises resources without worrying about conflicting addresses existing with the AWS environment. The diagram shows the web subnets being allocated via IPAM and the other non-routable VPCs being statically defined with the same range for all VPC's.
 
-![CIDR allocation](../doc-tse/architecture-doc/images/ipam/ipam-Overlapping-cidr-allocations.drawio.png)
+![CIDR allocation](/architecture-doc/images/ipam/ipam-Overlapping-cidr-allocations.drawio.png)
 
 ### Limitations/trade-offs
 
@@ -30,7 +30,7 @@ Assign two CIDR ranges which do not overlap with on-premises ranges.
 1. **Externally non-routable CIDR range for use across other VPC subnets, e.g. App and Data subnets**
     This should be a large subnet to suport growth within the environment. For example a /20 would allow for 64 VPCs.
 
-Update the following values in the [replacements-config.yaml](./config/replacements-config.yaml).
+Update the following values in the [replacements-config.yaml](/config/replacements-config.yaml).
 
 ```
   - key: AcceleratorIpamSupernet
@@ -65,7 +65,7 @@ Update the following values in the [replacements-config.yaml](./config/replaceme
     value: <CIDR allocation from the home region worksloads pool for the Prod workloads for the routable web subnets>
 ```
 
-Add the following values for the VPC ranges in the [replacements-config.yaml](./config/replacements-config.yaml).
+Add the following values for the VPC ranges in the [replacements-config.yaml](/config/replacements-config.yaml).
 
 ```
   - key: AcceleratorVpcCidr
@@ -97,7 +97,7 @@ Add the following values for the VPC ranges in the [replacements-config.yaml](./
     value: <CIDR range from AcceleratorVpcCidr used for Tgw-B>
 ```
 
-Update the [network-config.yaml](./config/network-config.yaml) "{{ AcceleratorPrefix }}-home-region-workload-pool" IPAM pool to use only a single workload CIDR. 
+Update the [network-config.yaml](/config/network-config.yaml) "{{ AcceleratorPrefix }}-home-region-workload-pool" IPAM pool to use only a single workload CIDR. 
 
 ```
         - name: "{{ AcceleratorPrefix }}-home-region-workload-pool"
@@ -107,7 +107,7 @@ Update the [network-config.yaml](./config/network-config.yaml) "{{ AcceleratorPr
             - "{{ homeRegionWorkloadCidr }}"
 ```
 
-Update the [network-config.yaml](./config/network-config.yaml) to add an additional CIDR to the VPC CIDR ranges and update the Web/App and Data subnets to use the new AcceleratorVpcCidr ranges. An example of this is below:
+Update the [network-config.yaml](/config/network-config.yaml) to add an additional CIDR to the VPC CIDR ranges and update the Web/App and Data subnets to use the new AcceleratorVpcCidr ranges. An example of this is below:
 
 ```
   - name: Prod

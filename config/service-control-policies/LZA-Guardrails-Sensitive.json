@@ -225,6 +225,7 @@
         "ce:*",
         "chime:*",
         "cloudfront:*",
+        "cloudtrail:*",
         "cloudwatch:GetMetricData",
         "config:*",
         "cur:*",

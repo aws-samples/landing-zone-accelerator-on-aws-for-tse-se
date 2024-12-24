@@ -1,5 +1,5 @@
 homeRegion: &HOME_REGION ca-central-1
-configVersion: 1.10.0-a
+configVersion: 1.11.0-a
 enabledRegions:
   - *HOME_REGION  
   - "ap-northeast-1"
@@ -19,6 +19,9 @@ enabledRegions:
   - "us-west-1"
   - "us-west-2"
 managementAccountAccessRole: OrganizationAccountAccessRole # UPDATE: If using Control Tower, set to AWSControlTowerExecution
+tags:
+  - key: Accelerator
+    value: '{{ AcceleratorPrefix }}'
 cloudwatchLogRetentionInDays: 731
 terminationProtection: true
 cdkOptions:
