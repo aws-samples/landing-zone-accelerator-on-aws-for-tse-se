@@ -34,12 +34,12 @@ Resources:
       Name: Infrastructure
       ParentId: !GetAtt AWSOrganization.RootId
 
-  # LandingZoneDeploymentOU:
-  #   DeletionPolicy: Retain
-  #   Type: 'AWS::Organizations::OrganizationalUnit'
-  #   Properties:
-  #     Name: LandingZoneDeployment
-  #     ParentId: !Ref AWSOrganization
+  LandingZoneDeploymentOU:
+    DeletionPolicy: Retain
+    Type: 'AWS::Organizations::OrganizationalUnit'
+    Properties:
+      Name: LandingZoneDeployment
+      ParentId: !Ref AWSOrganization
 
   SecurityAccount:
     DeletionPolicy: Retain
@@ -61,15 +61,15 @@ Resources:
         - !Ref SecurityOU
       RoleName: OrganizationAccountAccessRole
 
-  # LandingZoneDeploymentAccount:
-  #   DeletionPolicy: Retain
-  #   Type: AWS::Organizations::Account
-  #   Properties:
-  #     AccountName: LandingZoneDeployment
-  #     Email: !Ref LandingZoneDeploymentAccountEmail
-  #     ParentIds:
-  #       - !Ref LandingZoneDeploymentOU
-  #     RoleName: OrganizationAccountAccessRole
+  LandingZoneDeploymentAccount:
+    DeletionPolicy: Retain
+    Type: AWS::Organizations::Account
+    Properties:
+      AccountName: LandingZoneDeployment
+      Email: !Ref LandingZoneDeploymentAccountEmail
+      ParentIds:
+        - !Ref LandingZoneDeploymentOU
+      RoleName: OrganizationAccountAccessRole
 
 Outputs:
   OrgId:
