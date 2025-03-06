@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.11.2-a] 2025-03-06
+
+### Added
+
+- feat(security): Updated documentation to use Central root access management and delete all root credentials. Updated SCPs accordingly for the use of this feature. Refer to the [Centralize root access for member accounts](./documentation/FAQ.md#centralize-root-access-for-member-accounts) section in the FAQ for more details.
+
+### Changed
+
+- feat(SCP): Updated the SCP to remove unused 'AWSAOps-' prefix.
+
+
 ## [1.11.0-a] 2024-12-27
 
 ### Added

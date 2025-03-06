@@ -417,7 +417,6 @@ Additional guidelines to the application of MFA in AWS:
 
 - Hardware based phishing resistant MFA devices, like Yubikeys, provide the strongest form of MFA protection and are strongly encouraged for all account root users and all IAM users in the Organization Management (root) account;
 - the Organization Management (root) account requires a dedicated hardware MFA, such that when access is required to a sub-account root user, you do not expose the Organization Management account’s MFA device;
-- every ~50 sub-accounts require a dedicated hardware MFA device to protect the root user, minimizing the required number of hardware MFA devices and the scope of impact should a MFA device be lost or compromised;
 - each IAM break glass user requires a dedicated hardware MFA device, as do any additional IAM users in the Organization Management (root) account. While some CSPs do not recommend MFA on the break glass users, it is strongly encouraged in AWS;
 - the MFA devices for all account root users including the management account and the IAM break glass users should be securely stored, with well-defined access policies and procedures;
 - all other AWS users (AWS IdC, IAM in sub-accounts, etc.) regardless of privilege level should leverage security keys, passkeys, or virtual MFA devices (like Google Authenticator on a mobile device).
@@ -456,7 +455,18 @@ Having an `allow` to a particular API operation on the role (i.e. session policy
 
 ## 4.6. Root Authorization
 
-Every AWS account has a set of root credentials. These root credentials are generated on account creation with a random 64-character password. It is important that the root credentials for each account be recovered and MFA enabled via the AWS root credential password reset process using the account’s unique email address. To further protect these credentials, the Trusted Secure Enclaves Sensitive Edition Architecture specifically denies the use of the root user via SCP. Root credentials authorize all actions for all AWS services and for all resources in the account (except anything denied by SCPs). There are some actions which only root has the capability to perform which are found within the [AWS documentation](https://docs.aws.amazon.com/general/latest/gr/aws_tasks-that-require-root.html). These are typically rare operations (e.g. creation of X.509 keys), and should not be required in the normal course of business. Root credentials should be handled with extreme diligence, with MFA enabled per the guidance in the previous section.
+Every AWS account has a set of root credentials. These root credentials are generated on account creation with a random 64-character password. As part of the installation documentation we recommend to enable [Central root access for member accounts](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html) and remove the root credentials from all member accounts. It is important that the root credentials for the **management** account be recovered and MFA enabled via the AWS root credential password reset process using the account’s unique email address. To further protect these credentials, the Trusted Secure Enclaves Sensitive Edition Architecture specifically denies the use of the root user via SCP. Root credentials authorize all actions for all AWS services and for all resources in the account (except anything denied by SCPs). There are some actions which only root has the capability to perform which are found within the [AWS documentation](https://docs.aws.amazon.com/general/latest/gr/aws_tasks-that-require-root.html). These are typically rare operations (e.g. creation of X.509 keys), and should not be required in the normal course of business. The central root access management feature allow you to [perform some root user tasks](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user-privileged-task.html) on member accounts using short-term root access. Those actions are allowed by the SCPs provided by this architecture.
+
+In the very rare case where you need to login using root long term credentials in a member account you will need to follow these instructions:
+
+1. Disable/remove the **"ROOT"** SCP statement that applies to the target account. This is needed because the policy only allows actions using the short term root credentials
+2. [Take a privileged action](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user-privileged-task.html) on the account to **Allow password recovery**
+3. [Recover the password for the root user](https://docs.aws.amazon.com/IAM/latest/UserGuide/reset-root-password.html)
+4. Login to the account using the root user and execute the operation you need
+5. [Take a privileged action](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user-privileged-task.html) on the account to **Delete root credentials**
+6. Restore the original **"ROOT"** SCP statement
+
+Root credentials should be handled with extreme diligence, with MFA enabled per the guidance in the previous section for the management account and root credentials being removed from all member accounts.
 
 ## 4.7. Service Roles
 

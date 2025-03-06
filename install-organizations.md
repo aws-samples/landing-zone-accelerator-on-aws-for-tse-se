@@ -16,6 +16,21 @@ Run the [reference architecture account provisioning AWS CloudFormation script](
 | Security Account | Audit | Security |
 | Log Archive Account | LogArchive | Security |
 
+## 2.2 Enable centralized root access management
+
+Follow the instructions on [Enabling centralized root access](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html#enable-root-access-console) by going to the [IAM Management Console](https://console.aws.amazon.com/iam/), choose **Root access management** in the navigation pane, and then select **Enable**.
+
+### 2.2.1 Remove root credentials from member accounts
+
+1. Open the [IAM Management Console](https://console.aws.amazon.com/iam/) and choose **Root access management**
+2. Expand the list of existing accounts in your organization.
+3. For every account that indicates that Root user credentials are **Present**
+  a) Select the account from the list and choose **Take privileged action.**
+  b) Select **Delete root credentials**
+  c) Confirm the action
+
+For more information reference the [Taking a privileged action on a member account](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user-privileged-task.html) section of the IAM User Guide.
+
 ## 2.2 Deploy the installer CloudFormation stack
 Click the **Launch Solution** button on [Step 1. Launch the stack](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html) page. **Ensure the Region is set to your desired home Region, as it typically defaults to US East (N. Virginia)**
 

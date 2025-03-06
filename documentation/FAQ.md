@@ -97,3 +97,13 @@ As of LZA v1.9.2, the ability to enable Inspector using LZA configuration is not
 - These VPC Endpoints are needed: (ec2messages, inspector2, s3, ssm, ssmmessages). Ensure these are listed in the network-config.yaml
 - If all egress traffic is denied, and you are using a strict VPC Endpoint Policy, ensure these 2 buckets are accessible: (inspector2-oval-prod-ca-central-1, cis-datasets-prod-yul-5e0c95e). Note the region identifiers may need to change.
 - If ssmInventoryConfig is enabled, there may be a conflict with the deployment of the AWS-GatherSoftwareInventory SSM association (deployed by both the LZA setting, and Inspector). This currently happens when `"Automatically activate Inspector for new member accounts"` is configured. Disable this setting, and manually activate after new accounts are created.
+
+## Centralize root access for member accounts
+
+In November 2024, AWS launched a feature to [Centrally manage root access in AWS Identity and Access Management (IAM)](https://aws.amazon.com/about-aws/whats-new/2024/11/manage-root-access-aws-identity-access-management/). This allows to remove unnecessary root credentials for member accounts in AWS Organizations and have fewer highly privileged root credentials that must be secured with multi-factor authentication (MFA).
+
+For more details about the feature, review the [launch blog article](https://aws.amazon.com/blogs/aws/centrally-managing-root-access-for-customers-using-aws-organizations/) and the service documentation.
+
+We recommend enabling this feature on new LZA deployments as well as existing deployments and we updated the documentation accordingly. A change to the **"ROOT"** SCP statement was made to deny all actions with the root user that are not using short-term root credentials. In the very rare occasions where you need to use the root user long term credentials of a member account, special operations are needed. See the [Root Authorization](./architecture-doc/readme.md#46-root-authorization) section in the Architecture Guide for more details.
+
+For existing deployments we recommend you remove existing root credentials from all your member accounts after you enable the feature. See the [Enable centralized root access management](../install-controltower.md#25-enable-centralized-root-access-management) section of the installation guide for more details.

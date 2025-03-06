@@ -16,25 +16,14 @@
     },
     {
       "Sid": "ROOT",
-      "Effect": "Deny",
-      "NotAction": [
-        "iam:CreateVirtualMFADevice",
-        "iam:EnableMFADevice",
-        "iam:GetUser",
-        "iam:ListMFADevices",
-        "iam:ListVirtualMFADevices",
-        "iam:ResyncMFADevice",
-        "sts:GetSessionToken",
-        "iam:DeleteVirtualMFADevice",
-        "trustedadvisor:*",
-        "support:*",
-        "account:*"
-      ],
+      "Effect":"Deny",
+      "Action":"*",
       "Resource": "*",
-      "Condition": {
-        "ArnLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:root"]
-        }
+      "Condition":{
+        "ArnLike":{
+          "aws:PrincipalArn":["arn:${PARTITION}:iam::*:root"]
+        },
+        "Null":{"aws:AssumedRoot":"true"}
       }
     },
     {

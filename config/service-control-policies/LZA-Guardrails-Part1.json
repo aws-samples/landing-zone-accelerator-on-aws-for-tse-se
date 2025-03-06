@@ -209,7 +209,7 @@
         },
         "ArnNotLike": {
           "aws:PrincipalArn": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/AWSAOps-*"
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"
           ]
         }
       }

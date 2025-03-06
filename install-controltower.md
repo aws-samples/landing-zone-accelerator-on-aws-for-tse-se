@@ -1,7 +1,7 @@
 
 # 2. Deploy Landing Zone Accelerator using AWS Control Tower
 
-## 2.1 Configure AWS Control Tower
+## 2.1 Enable AWS Organizations
 
 Starting with version v1.7.0 of Landing Zone Accelerator, Control Tower can be setup as part of the LZA installation by setting the appropriate parameters when deploying the CloudFormation stack in the next step.
 
@@ -38,6 +38,21 @@ After Control Tower deployment you should have a Security and Infrastructure OU 
 Go to Control Tower Account Factory and edit the Network configuration
   - Set the Maximum number of private subnets to 0
   - Uncheck all regions for VPC creations (VPC creation will be handled by the accelerator)
+
+## 2.5 Enable centralized root access management
+
+Follow the instructions on [Enabling centralized root access](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html#enable-root-access-console) by going to the [IAM Management Console](https://console.aws.amazon.com/iam/), choose **Root access management** in the navigation pane, and then select **Enable**.
+
+### 2.5.1 Remove root credentials from member accounts
+
+1. Open the [IAM Management Console](https://console.aws.amazon.com/iam/) and choose **Root access management**
+2. Expand the list of existing accounts in your organization.
+3. For every account that indicates that Root user credentials are **Present**
+  a) Select the account from the list and choose **Take privileged action.**
+  b) Select **Delete root credentials**
+  c) Confirm the action
+
+For more information reference the [Taking a privileged action on a member account](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user-privileged-task.html) section of the IAM User Guide.
 
 # 3. Deploy the reference architecture
 
