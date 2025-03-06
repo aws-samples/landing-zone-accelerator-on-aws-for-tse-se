@@ -27,16 +27,6 @@ Since the `1.7.0-a` release of the configuration, Application Load Balancers are
 
 ALB Forwarding solves this problem by executing a small snippet of code every 60 seconds which updates managed ALB listeners with any IP changes, ensuring any managed flows do not go offline. This removes the requirement to leverage a 3rd party appliance to perform NAT to a DNS name.
 
-## 4.5 Deploy Managed Active Directory configuration instance
-When using Managed Active Directory, manual steps are needed to customize the security group created for your domain controllers. By default traffic is only allowed from the CIDR range of the VPC where the directory is deployed. Traffic needs to be allowed from the Endpoint VPC where Amazon Route 53 Outbound Resolver endpoints are deployed as well as all other CIDRs associated to your VPC, other peered VPCs, or networks that you have connected using AWS Direct Connect, AWS Transit Gateway, or Virtual Private Network that need to communicate with the domain controllers.
-
-1. Locate the security group created by Directory Service in your Operations account (named `d-<your-directory-id>_controllers`) and edit the source of the inbound rules to allow traffic from the needed CIDR ranges. You can use the same value used for the `AcceleratorIpamSupernet` replacement variable that covers all your VPC address space. This needs to be customized according to your needs.
-
-Refer to the [AWS Directory Service documentation](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_getting_started.html#ms_ad_getting_started_what_gets_created) for more details.
-
-2. Edit the `iam-config.yaml` file to un-comment and edit as needed the `activeDirectoryConfigurationInstance` block under `managedActiveDirectories`. Send your configuration changes to CodeCommit or S3
-
-3. Release the `AWSAccelerator-Pipeline` to finalize the deployment of the Active Directory configuration instance.
 
 ### Architecture Overview
 
@@ -84,3 +74,14 @@ __Note__: The sample below is in standard JSON format, not DynamoDB JSON. When a
 
 ### Troubleshooting ALB forwarding
 For tips on troubleshooting issues with ALB forwarding rules see the [FAQ about Application Load Balancers Forwarding](./documentation/FAQ.md#Application-Load-Balancers-Forwarding)
+
+## 4.5 Deploy Managed Active Directory configuration instance
+When using Managed Active Directory, manual steps are needed to customize the security group created for your domain controllers. By default traffic is only allowed from the CIDR range of the VPC where the directory is deployed. Traffic needs to be allowed from the Endpoint VPC where Amazon Route 53 Outbound Resolver endpoints are deployed as well as all other CIDRs associated to your VPC, other peered VPCs, or networks that you have connected using AWS Direct Connect, AWS Transit Gateway, or Virtual Private Network that need to communicate with the domain controllers.
+
+1. Locate the security group created by Directory Service in your Operations account (named `d-<your-directory-id>_controllers`) and edit the source of the inbound rules to allow traffic from the needed CIDR ranges. You can use the same value used for the `AcceleratorIpamSupernet` replacement variable that covers all your VPC address space. This needs to be customized according to your needs.
+
+Refer to the [AWS Directory Service documentation](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_getting_started.html#ms_ad_getting_started_what_gets_created) for more details.
+
+2. Edit the `iam-config.yaml` file to un-comment and edit as needed the `activeDirectoryConfigurationInstance` block under `managedActiveDirectories`. Send your configuration changes to CodeCommit or S3
+
+3. Release the `AWSAccelerator-Pipeline` to finalize the deployment of the Active Directory configuration instance.
