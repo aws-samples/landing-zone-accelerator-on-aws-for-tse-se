@@ -105,6 +105,9 @@ With AWS Organizations, you can centralize management of all of your accounts, g
 
 The following are the minimum required steps to enable private marketplace.
 
+> [!IMPORTANT]
+> [Enable AWS Organizations in your home Region](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html)
+
 1. In the Organization Management account go here: https://aws.amazon.com/marketplace/privatemarketplace/create
 2. Select both checkboxes in the `Enable trusted access for AWS Organizations` section
 3. Click `Enable a Private Marketplace`, and wait for activation to complete

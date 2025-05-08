@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.12.1-a] 2025-05-09
+
+### Changed
+
+- feat(global-config): Update cloudwatchLogs configuration to use account level subscription filters.
+- feat(scp): Updated LOG in LZA-GuardRails-Part1 to allow DeleteLogGroup, PutRetentionPolicy and PutSubscriptionFilter. Given that the logs are streamed centrally using an account-level subscription filter and stored in S3 with a retention policy set on S3, changing this does not risk the loss of application logs. See the [FAQ](./documentation/FAQ.md#why-are-you-now-allowing-the-deletion-of-cloudwatch-log-groups-) for more background on this change.
+- doc(installation): Updated Private Marketplace configuration instructions.
+- fix(scp): Updated QuarantinePolicy by removing no longer needed exclusion statement
+
+
 ## [1.11.2-a] 2025-03-06
 
 ### Added

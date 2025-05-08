@@ -137,9 +137,12 @@
       "Effect": "Deny",
       "Action": [
         "ec2:DeleteFlowLogs",
-        "logs:Delete*",
-        "logs:PutRetentionPolicy",
-        "logs:PutSubscriptionFilter"
+        "logs:DeleteA*",
+        "logs:DeleteD*",
+        "logs:DeleteI*",
+        "logs:DeleteLogD*",
+        "logs:DeleteR*",
+        "logs:PutAccountPolicy"
       ],
       "Resource": "*",
       "Condition": {

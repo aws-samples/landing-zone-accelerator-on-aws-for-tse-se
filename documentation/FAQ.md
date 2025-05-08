@@ -107,3 +107,11 @@ For more details about the feature, review the [launch blog article](https://aws
 We recommend enabling this feature on new LZA deployments as well as existing deployments and we updated the documentation accordingly. A change to the **"ROOT"** SCP statement was made to deny all actions with the root user that are not using short-term root credentials. In the very rare occasions where you need to use the root user long term credentials of a member account, special operations are needed. See the [Root Authorization](./architecture-doc/readme.md#46-root-authorization) section in the Architecture Guide for more details.
 
 For existing deployments we recommend you remove existing root credentials from all your member accounts after you enable the feature. See the [Enable centralized root access management](../install-controltower.md#25-enable-centralized-root-access-management) section of the installation guide for more details.
+
+## CloudWatch Log Groups
+
+### Why are you now allowing the deletion of CloudWatch Log Groups?
+
+LZA v1.12.0 has introduced support for account-level subscription filters. This new feature allows us to use a single per-account subscription filter to ensure the delivery of all CloudWatch Log Groups logs to the central S3 bucket. Previously, we relied on EventBridge rules and custom Lambda functions to add subscription filters to each Log Group individually. This improvement now frees up the two log group-level subscription filters for customer use. Consequently, we have updated the Service Control Policy (SCP) to allow the creation and removal of subscription filters; however, the modification of account-level subscription filters remains limited to the accelerator roles. The "LOG" SCP statement no longer denies the logs:DeleteLogGroup and logs:PutRetentionPolicy actions. This change provides users of the landing zone with more flexibility in managing Log Groups within workload accounts, while still ensuring central log aggregation and retention in the Log Archive account.
+
+Note: These changes were introduced in version v1.12.1a of this configuration. If you opt-in to the updated version of the SCP, you need to make sure to use the type: ACCOUNT configuration under logging/cloudWatchLogs/subscription in global-config.yaml

@@ -65,7 +65,6 @@ This document is intended to outline the technical measures that are delivered b
   - [5.4. GuardDuty](#54-guardduty)
   - [5.5. Config](#55-config)
   - [5.6. CloudWatch Logs](#56-cloudwatch-logs)
-    - [5.6.1. CloudWatch Logs Friction](#561-cloudwatch-logs-friction)
   - [5.7. SecurityHub](#57-securityhub)
   - [5.8. Systems Manager Session Manager and Fleet Manager](#58-systems-manager-session-manager-and-fleet-manager)
   - [5.9. Systems Manager Inventory](#59-systems-manager-inventory)
@@ -496,7 +495,7 @@ Guardrail1
 | `ALM`                     | Prevents deletion and modification of protected cloudwatch alarms which alert on significant control plane events                                                              |
 | `CFN`                     | Prevents creation, deletion or modification of any CloudFormation stacks deployed by the automation tooling                                                                    |
 | `LAM`                     | Prevents the creation, deletion and modification of any Lambda functions deployed by the automation tooling                                                                    |
-| `LOG`                     | Prevents the deletion and modification of any CloudWatch Log groups and VPC flow logs                                                                                          |
+| `LOG`                     | Prevents the deletion and modification of CloudWatch Log groups account subscription filters and VPC flow logs                                                                 |
 | `LOG2`                    | Additional CloudWatch Log group protections                                                                                                                                    |
 | `NET1`                    | Prevents deletion of any protected networking (VPC) constructs like subnets and route tables                                                                                   |
 | `NFW`                     | Prevents destructive operations on protected AWS Network Firewalls                                                                                                             |
@@ -600,14 +599,6 @@ Config may be [enabled at the Organization][config-org] level - this provides an
 ## 5.6. CloudWatch Logs
 
 CloudWatch Logs is AWS’ log aggregator service, used to monitor, store, and access log files from EC2 instances, AWS CloudTrail, Route 53, and other sources. The _Trusted Secure Enclaves Sensitive Edition Architecture_ requires that log subscriptions are created for all log groups in all workload accounts, and streamed into S3 in the log-archive account (via Kinesis) for analysis and long-term audit purposes. The CloudWatch log group retention period on all log groups should be set to a medium retention period (such as 2 years) to enable easy online access.
-
-### 5.6.1. CloudWatch Logs Friction
-
-CloudWatch Log group deletion is prevented via SCPs for security purposes in this design and bypassing this rule would be a fundamental violation of security best practices. This protection does NOT exist solely to protect TSE-SE logs, but all CloudWatch log groups. Users of the TSE-SE environment will need to ensure they set CloudFormation stack Log group retention type to RETAIN, or stack deletes will fail when attempting to delete a stack (as deleting the log group will be blocked) and users will encounter errors. As repeated stack deployments will be prevented from recreating the same log group name (as it already exists), end users will either need to check for the existence of the log group before attempting creation, or include a random hash in the log group name. The TSE-SE also sets log group retention for all log groups to value(s) specified by customers in the config file and prevents end users from setting or changing Log group retentions. When creating new log groups, end users must either not configure a retention period, or set it to the default NEVER expire or they will also be blocked from creating the CloudWatch Log group. If applied by bypassing the guardrails, customer specified retention periods on log group creation will be overridden with the Accelerator specified retention period.
-
-While a security best practice, some end users request this be changed, but you need to ask: Are end users allowed to go in and clean out logs from Windows Event Viewer (locally or on domain controllers) after testing? Clean out Linux kernel logs? Apache log histories? The fundamental principal is that all and as many logs as possible will be retained for a defined retention period (some longer). In the "old days", logs were hidden deep within OS directory structures or access restricted by IT from developers - now that we make them all centralized, visible, and accessible, end users seem to think they suddenly need to clean them up. Customers need to establish a usable and scalable log group naming standard/convention as the first step in moving past this concern, such that they can always find their active logs easily. As stated, to enable repeated install and removal of stacks during test cycles, end user CloudFormation stacks need to set log groups to RETAIN and leverage a random hash in log group naming (or check for existence, before creating).
-
-The TSE-SE SCPs (guardrails/protections) are our recommendations, yet designed to be fully customizable, enabling any customer to carefully override these defaults to meet their individual requirements. If insistent, we'd suggest only bypassing the policy on the Sandbox OU, and only for log groups that start with a very specific prefix (not all log groups). When a customer wants to use the delete capability, they would need to name their log group with the designated prefix - i.e. opt-in to allow CloudWatch log group deletes.
 
 ## 5.7. SecurityHub
 
