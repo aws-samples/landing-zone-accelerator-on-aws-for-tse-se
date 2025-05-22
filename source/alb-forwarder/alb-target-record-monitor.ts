@@ -23,6 +23,8 @@ import {
   ModifyRuleCommandInput,
   ProtocolEnum,
   TargetTypeEnum,
+  ModifyTargetGroupCommand,
+  ModifyTargetGroupCommandInput
 } from '@aws-sdk/client-elastic-load-balancing-v2';
 
 import * as _ from 'lodash';
@@ -37,13 +39,31 @@ const sleep = (ms: number) => {
   });
 };
 
-const createTargetGroup = async (name: string, port: number, vpcId: string, protocol: ProtocolEnum) => {
+const updateTargetGroupHealthCheck = async (
+  targetGroupArn: string,
+  healthCheckPath: string
+) => {
+  const params: ModifyTargetGroupCommandInput = {
+    TargetGroupArn: targetGroupArn,
+    HealthCheckPath: healthCheckPath,
+  };
+  return elbv2.send(new ModifyTargetGroupCommand(params));
+};
+
+const healthCheckPathChanged = (oldRecord: any, newRecord: any): boolean => {
+  const oldPath = oldRecord.healthCheckPath || "/";
+  const newPath = newRecord.healthCheckPath || "/";
+  return oldPath !== newPath;
+};
+
+const createTargetGroup = async (name: string, port: number, vpcId: string, protocol: ProtocolEnum, healthCheckPath: string = "/") => {
   const targetGroupParams = {
     Name: name,
     Port: port,
     Protocol: protocol,
     VpcId: vpcId,
     TargetType: TargetTypeEnum.IP,
+    HealthCheckPath: healthCheckPath,
   };
 
   return elbv2.createTargetGroup(targetGroupParams);
@@ -254,6 +274,7 @@ const createRecordHandler = async (record: any) => {
       record.targetGroupDestinationPort,
       record.vpcId,
       record.targetGroupProtocol,
+      record.healthCheckPath || "/"
     );
 
     const targetGroupArn = targetGroup?.TargetGroups?.[0].TargetGroupArn ?? '';
@@ -351,6 +372,15 @@ const updateRecordHandler = async (newRecord: any, oldRecord: any) => {
       }
       await updateRulePriority(newRecord.metadata.ruleArn, newRecord.rule.condition.priority);
     }
+
+    if (healthCheckPathChanged(oldRecord, newRecord)) {
+      console.log(`Detected a health check path change. Updating target group health check in-place for ${newRecord.metadata.targetGroupArn}`);
+      await updateTargetGroupHealthCheck(
+        newRecord.metadata.targetGroupArn,
+        newRecord.healthCheckPath || "/"
+      );
+    }
+
     if (targetGroupChange(oldRecord, newRecord)) {
       console.log(
         `Detected a target group change. deleting target group  ${newRecord.metadata.targetGroupArn} and creating a new target group`,
