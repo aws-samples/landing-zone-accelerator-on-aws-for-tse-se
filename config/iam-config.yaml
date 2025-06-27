@@ -161,7 +161,6 @@ managedActiveDirectories:
 #        - scriptName: ADGroupGrantPermissionsSetup
 #          scriptFilePath: ad-config-scripts/AD-group-grant-permissions-setup.ps1
 #        - scriptName: ADConnectorPermissionsSetup
-#            - "*-View"
 #          scriptFilePath: ad-config-scripts/AD-connector-permissions-setup.ps1
 #        - scriptName: ConfigurePasswordPolicy
 #          scriptFilePath: ad-config-scripts/Configure-password-policy.ps1
@@ -199,4 +198,5 @@ managedActiveDirectories:
 #        - name: User2
 #          email: {{ ActiveDirectoryReadonlyUserEmail }}
 #          groups:
+#            - "*-View"
 ## END

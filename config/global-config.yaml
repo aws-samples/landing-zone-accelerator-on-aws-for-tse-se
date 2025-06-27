@@ -1,5 +1,5 @@
 homeRegion: &HOME_REGION ca-central-1
-configVersion: 1.12.3-a
+configVersion: 1.12.3-b
 enabledRegions:
   - *HOME_REGION
   - "ap-northeast-1"

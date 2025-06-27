@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.12.3-b] 2025-06-27
+
+### Changed
+
+- fix(iam): updated iam-config to resolve validation issues for the mad configuration instance when deployed.
+
+
 ## [1.12.3-a] 2025-06-27
 
 ### Changed
