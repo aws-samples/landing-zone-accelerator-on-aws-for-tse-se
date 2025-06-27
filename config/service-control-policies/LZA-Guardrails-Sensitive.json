@@ -264,7 +264,9 @@
         "payments:ListPaymentPreferences",
         "tax:ListTaxRegistrations",
         "sustainability:*",
-        "quicksight:DescribeAccountSubscription"
+        "quicksight:DescribeAccountSubscription",
+        "bedrock:*",
+        "sagemaker:L*"
       ],
       "Resource": "*",
       "Condition": {

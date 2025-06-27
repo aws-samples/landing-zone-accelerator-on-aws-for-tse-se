@@ -229,7 +229,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs18.x
+              runtime: nodejs22.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -266,7 +266,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs18.x
+              runtime: nodejs22.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -336,21 +336,6 @@ awsConfig:
           - ap-northeast-3
           - ca-west-1
       rules:
-        - name: "{{ AcceleratorPrefix }}-sagemaker-notebook-instance-kms-key-configured"
-          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-dynamodb-in-backup-plan"
-          identifier: DYNAMODB_IN_BACKUP_PLAN
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-sagemaker-endpoint-configuration-kms-key-configured"
-          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
         - name: "{{ AcceleratorPrefix }}-ebs-in-backup-plan"
           identifier: EBS_IN_BACKUP_PLAN
           tags:
@@ -361,11 +346,6 @@ awsConfig:
           tags:
             - key: Accelerator
               value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-securityhub-enabled"
-          identifier: SECURITYHUB_ENABLED
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
         - name: "{{ AcceleratorPrefix }}-internet-gateway-authorized-vpc-only"
           complianceResourceTypes:
             - AWS::EC2::InternetGateway
@@ -373,19 +353,6 @@ awsConfig:
           tags:
             - key: Accelerator
               value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-dynamodb-table-encrypted-kms"
-          complianceResourceTypes:
-            - AWS::DynamoDB::Table
-          identifier: DYNAMODB_TABLE_ENCRYPTED_KMS
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-guardduty-non-archived-findings"
-          inputParameters:
-            daysHighSev: "1"
-            daysLowSev: "30"
-            daysMediumSev: "7"
-          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
         - name: "{{ AcceleratorPrefix }}-imdsv2-check"
           identifier: EC2_IMDSV2_CHECK
           complianceResourceTypes:
@@ -448,6 +415,53 @@ awsConfig:
           tags:
             - key: Accelerator
               value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-sagemaker-notebook-instance-kms-key-configured"
+          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-dynamodb-in-backup-plan"
+          identifier: DYNAMODB_IN_BACKUP_PLAN
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-sagemaker-endpoint-configuration-kms-key-configured"
+          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-securityhub-enabled"
+          identifier: SECURITYHUB_ENABLED
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-dynamodb-table-encrypted-kms"
+          complianceResourceTypes:
+            - AWS::DynamoDB::Table
+          identifier: DYNAMODB_TABLE_ENCRYPTED_KMS
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-guardduty-non-archived-findings"
+          inputParameters:
+            daysHighSev: "1"
+            daysLowSev: "30"
+            daysMediumSev: "7"
+          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
+        - name: "{{ AcceleratorPrefix }}-s3-bucket-policy-grantee-check"
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_BUCKET_POLICY_GRANTEE_CHECK
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+        - name: "{{ AcceleratorPrefix }}-api-gw-cache-enabled-and-encrypted"
+          complianceResourceTypes:
+            - AWS::ApiGateway::Stage
+          identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
     - deploymentTargets:
         ##  Section for config rules across all OUs except Sandbox + Management Account
         ## Rules not supported in ca-west-1 ONLY
@@ -474,13 +488,6 @@ awsConfig:
           tags:
             - key: Accelerator
               value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-s3-bucket-policy-grantee-check"
-          complianceResourceTypes:
-            - AWS::S3::Bucket
-          identifier: S3_BUCKET_POLICY_GRANTEE_CHECK
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
         - name: "{{ AcceleratorPrefix }}-iam-user-group-membership-check"
           complianceResourceTypes:
             - AWS::IAM::User
@@ -497,13 +504,6 @@ awsConfig:
           complianceResourceTypes:
             - AWS::IAM::Group
           identifier: IAM_GROUP_HAS_USERS_CHECK
-          tags:
-            - key: Accelerator
-              value: '{{ AcceleratorPrefix }}'
-        - name: "{{ AcceleratorPrefix }}-api-gw-cache-enabled-and-encrypted"
-          complianceResourceTypes:
-            - AWS::ApiGateway::Stage
-          identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED
           tags:
             - key: Accelerator
               value: '{{ AcceleratorPrefix }}'

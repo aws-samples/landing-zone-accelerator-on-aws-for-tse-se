@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.12.3-a] 2025-06-27
+
+### Changed
+
+- feat(scp): Updated Part1 "NET1" SCP statement to include IPAM.
+- feat(scp): updated SCP to allow Bedrock's use in multiple regions (US, EU, and APAC) to leverage Cross Region Inference. Knowledge Bases remain blocked outside the home region because of Lambda SCP guardrails. Customers should review and test the updated "GBL1" SCP statement before applying to ensure it meets their business needs. For questions, please reach out to your AWS Account Team. Additional info here:  https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html
+- fix(lambda): Updated the custom AWS Config rules runtime to nodejs22 and SSM documents to python3.11
+- feat(security): Updated AWS Config Rules deployment targets for rules now available in ca-west-1
+
+
 ## [1.12.2-a] 2025-05-23
 
 ### Changed

@@ -202,6 +202,7 @@
         "ec2:DeleteRouteTable",
         "ec2:DeleteSubnet",
         "ec2:DeleteRoute",
+        "ec2:DeleteIp*",
         "ec2:DetachInternetGateway",
         "ec2:DisassociateRouteTable"
       ],
