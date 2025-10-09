@@ -379,19 +379,19 @@ vpcs:
             target: "{{ AcceleratorPrefix }}-firewall"
             targetAvailabilityZone: b
       - name: Perimeter-A
-        routes: 
+        routes:
           - name: IgwRoute
             destination: 0.0.0.0/0
             type: internetGateway
             target: IGW
       - name: Perimeter-B
-        routes: 
+        routes:
           - name: IgwRoute
             destination: 0.0.0.0/0
             type: internetGateway
             target: IGW
       - name: Perimeter-Nat-A
-        routes: 
+        routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
             type: networkFirewall
@@ -402,7 +402,7 @@ vpcs:
             type: transitGateway
             target: Network-Main
       - name: Perimeter-Nat-B
-        routes: 
+        routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
             type: networkFirewall

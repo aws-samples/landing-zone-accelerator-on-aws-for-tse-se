@@ -266,7 +266,8 @@
         "sustainability:*",
         "quicksight:DescribeAccountSubscription",
         "bedrock:*",
-        "sagemaker:L*"
+        "sagemaker:L*",
+        "uxc:*"
       ],
       "Resource": "*",
       "Condition": {

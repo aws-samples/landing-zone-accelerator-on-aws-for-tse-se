@@ -1,23 +1,6 @@
-homeRegion: &HOME_REGION ca-central-1
-configVersion: 1.12.3-b
-enabledRegions:
-  - *HOME_REGION
-  - "ap-northeast-1"
-  - "ap-northeast-2"
-  - "ap-northeast-3"
-  - "ap-south-1"
-  - "ap-southeast-1"
-  - "ap-southeast-2"
-  - "eu-central-1"
-  - "eu-north-1"
-  - "eu-west-1"
-  - "eu-west-2"
-  - "eu-west-3"
-  - "sa-east-1"
-  - "us-east-1"
-  - "us-east-2"
-  - "us-west-1"
-  - "us-west-2"
+homeRegion: {{AcceleratorHomeRegion}}
+configVersion: 1.13.1-a
+enabledRegions: [{{AcceleratorHomeRegion}}, {{OtherEnabledRegions}}]
 managementAccountAccessRole: OrganizationAccountAccessRole # UPDATE: If using Control Tower, set to AWSControlTowerExecution
 tags:
   - key: Accelerator
@@ -27,7 +10,7 @@ terminationProtection: true
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: false
-  customDeploymentRole: AWSAccelerator-PipelineRole # UPDATE: If using a custom AcceleratorPrefix in the installer stack, this need to be updated accordingly
+  customDeploymentRole: "{{AcceleratorPrefix}}-PipelineRole"
   forceBootstrap: true
 snsTopics:
   deploymentTargets:
@@ -100,23 +83,7 @@ logging:
       - EC2-Default-SSM-AD-Role
       - RDGW-Role
       - Rsyslog-Role
-    excludeRegions:
-      - ap-northeast-1
-      - ap-northeast-2
-      - ap-northeast-3
-      - ap-south-1
-      - ap-southeast-1
-      - ap-southeast-2
-      - eu-central-1
-      - eu-north-1
-      - eu-west-1
-      - eu-west-2
-      - eu-west-3
-      - sa-east-1
-      - us-east-1
-      - us-east-2
-      - us-west-1
-      - us-west-2
+    excludeRegions: [{{OtherEnabledRegions}}]
     excludeAccounts:
       - Management
       - LogArchive
@@ -141,23 +108,7 @@ logging:
           - Sandbox
         accounts:
           - Management
-        excludedRegions:
-          - ap-northeast-1
-          - ap-northeast-2
-          - ap-northeast-3
-          - ap-south-1
-          - ap-southeast-1
-          - ap-southeast-2
-          - eu-central-1
-          - eu-north-1
-          - eu-west-1
-          - eu-west-2
-          - eu-west-3
-          - sa-east-1
-          - us-east-1
-          - us-east-2
-          - us-west-1
-          - us-west-2
+        excludedRegions: [{{OtherEnabledRegions}}]
   accessLogBucket:
     lifecycleRules:
       - enabled: true
@@ -191,23 +142,7 @@ s3:
         - Sandbox
       accounts:
         - Management
-      excludedRegions:
-        - ap-northeast-1
-        - ap-northeast-2
-        - ap-northeast-3
-        - ap-south-1
-        - ap-southeast-1
-        - ap-southeast-2
-        - eu-central-1
-        - eu-north-1
-        - eu-west-1
-        - eu-west-2
-        - eu-west-3
-        - sa-east-1
-        - us-east-1
-        - us-east-2
-        - us-west-1
-        - us-west-2
+      excludedRegions: [{{OtherEnabledRegions}}]
 lambda:
   encryption:
     useCMK: true
@@ -223,23 +158,23 @@ lambda:
         - Sandbox
       accounts:
         - Management
-      excludedRegions:
-        - ap-northeast-1
-        - ap-northeast-2
-        - ap-northeast-3
-        - ap-south-1
-        - ap-southeast-1
-        - ap-southeast-2
-        - eu-central-1
-        - eu-north-1
-        - eu-west-1
-        - eu-west-2
-        - eu-west-3
-        - sa-east-1
-        - us-east-1
-        - us-east-2
-        - us-west-1
-        - us-west-2
+      excludedRegions: [{{OtherEnabledRegions}}]
+sqs:
+  encryption:
+    useCMK: true
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - UnClass
+        - Sandbox
+      accounts:
+        - Management
+      excludedRegions: [{{OtherEnabledRegions}}]
 ssmInventory:
   enable: true
   deploymentTargets:

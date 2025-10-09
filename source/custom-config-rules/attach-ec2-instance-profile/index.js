@@ -7,7 +7,15 @@ exports.handler = async function(event, context) {
   console.log(`Custom Rule for checking EC2 Instance Iam Profile attachment...`);
   console.log(JSON.stringify(event, null, 2));
 
-  const invokingEvent = JSON.parse(event.invokingEvent);
+  let invokingEvent;
+  try {
+    invokingEvent = JSON.parse(event.invokingEvent);
+  }
+  catch (error) {
+    console.error('Error parsing invokingEvent:', error);
+    throw new Error('Invalid invokingEventformat');
+  }
+
   const invocationType = invokingEvent.messageType;
   if (invocationType === 'ScheduledNotification') {
     return;

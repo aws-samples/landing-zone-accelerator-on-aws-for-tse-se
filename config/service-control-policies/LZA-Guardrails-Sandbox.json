@@ -179,18 +179,16 @@
         "payments:GetPaymentStatus",
         "payments:ListPaymentPreferences",
         "tax:ListTaxRegistrations",
-        "sustainability:*"
+        "sustainability:*",
+        "quicksight:DescribeAccountSubscription",
+        "bedrock:*",
+        "sagemaker:L*",
+        "uxc:*"
       ],
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "aws:RequestedRegion": [
-            "${HOME_REGION}",
-            "us-east-1",
-            "us-east-2",
-            "us-west-1",
-            "us-west-2"
-          ]
+          "aws:RequestedRegion": ${ACCEL_LOOKUP::CUSTOM:SandboxAllowedRegions}
         },
         "ArnNotLike": {
           "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]

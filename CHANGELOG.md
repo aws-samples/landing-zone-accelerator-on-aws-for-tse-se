@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.13.1-a] 2025-10-24
+
+### Changed
+
+- feat(replacements): Introduced new replacement variables and extended usage of existing variables to all configuration files. These changes depend on features introduced in LZA v1.13.0.
+- fix(global-config): Added new CMK exclusion rule to reduce costs for excluded regions.
+- feat(security): Enhanced CloudWatch alarm descriptions with investigation links. Updates 16 CloudTrail-related alarm descriptions in security-config.yaml to include concise actionable titles, direct CloudWatch console links, and pre-configured Logs Insights URLs with 24-hour lookback queries for faster incident investigation and improved MTTD/MTTR.
+- fix(config-rules): Enhanced custom config rule code with try/catch best practices to remediate AWS Inspector findings.
+- feat(ssm): Disable SSM automation document public sharing.
+- feat(scp): Allow AWS User Experience Customization (UXC).
+- chore: updated network diagrams and documentation.
+- fix(scp): Update Sandbox and Unclass SCPs for CRIS.
+
+
 ## [1.12.3-b] 2025-06-27
 
 ### Changed

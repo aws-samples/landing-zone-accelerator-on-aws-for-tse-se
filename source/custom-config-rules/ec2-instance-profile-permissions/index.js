@@ -7,9 +7,24 @@ exports.handler = async function (event, context) {
   console.log(`Custom Rule for checking Policies attached to IAM role used under Instance Profile...`);
   console.log(JSON.stringify(event, null, 2));
 
-  const invokingEvent = JSON.parse(event.invokingEvent);
+  let invokingEvent;
+  try {
+    invokingEvent = JSON.parse(event.invokingEvent);
+  } catch (error) {
+    console.error('Error parsing invokingEvent:', error);
+    throw new Error('Invalid invokingEventFormat');
+  }
+
   const invocationType = invokingEvent.messageType;
-  const ruleParams = JSON.parse(event.ruleParameters || '{}');
+
+  let ruleParams;
+  try {
+    ruleParams = JSON.parse(event.ruleParameters || '{}');
+  } catch (error) {
+    console.error('Error parsing ruleParameters:', error);
+    throw new Error('Invalid ruleParametersFormat');
+  }
+  
   if (!ruleParams.AWSManagedPolicies && !ruleParams.CustomerManagedPolicies) {
     throw new Error('Either "AWSManagedPolicies" or "CustomerManagedPolicies" are required');
   }

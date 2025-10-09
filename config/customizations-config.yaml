@@ -14,4 +14,4 @@ customizations:
         accounts:
           - Perimeter
       regions:
-        - ca-central-1
+        - {{AcceleratorHomeRegion}}

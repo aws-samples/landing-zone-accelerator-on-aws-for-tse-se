@@ -19,8 +19,6 @@ The sample config files define a log retention period of 2 years based on consul
 
 Customers are encouraged to work with their local AWS Account Teams to learn more about customizing this configuration, to learn more about the TSE-SE reference architecture, the Landing Zone Accelerator on AWS solution, or global national security and defense solutions.
 
-**NOTE: The initial release of the TSE-SE LZA sample configuration files included as part of LZA v1.3 do not yet fully automate the delivery of this architecture. This will be resolved in subsequent LZA releases.**
-
 -  [Configuration files and installation instructions](./install.md)
 -  [Instructions for version updates](./update-instructions.md)
 -  [FAQ](./documentation/FAQ.md)

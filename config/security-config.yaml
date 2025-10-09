@@ -2,23 +2,7 @@ centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
     enable: true
-    excludeRegions:
-      - ap-northeast-1
-      - ap-northeast-2
-      - ap-northeast-3
-      - ap-south-1
-      - ap-southeast-1
-      - ap-southeast-2
-      - eu-central-1
-      - eu-north-1
-      - eu-west-1
-      - eu-west-2
-      - eu-west-3
-      - sa-east-1
-      - us-east-1
-      - us-east-2
-      - us-west-1
-      - us-west-2
+    excludeRegions: [{{OtherEnabledRegions}}]
   scpRevertChangesConfig:
     enable: true
     snsTopicName: SecurityHigh
@@ -83,24 +67,11 @@ centralSecurityServices:
     logging:
       cloudWatch:
         enable: true
+  ssmSettings:
+    blockPublicDocumentSharing: 
+      enable: true
   ssmAutomation:
-    excludeRegions:
-      - ap-northeast-1
-      - ap-northeast-2
-      - ap-northeast-3
-      - ap-south-1
-      - ap-southeast-1
-      - ap-southeast-2
-      - eu-central-1
-      - eu-north-1
-      - eu-west-1
-      - eu-west-2
-      - eu-west-3
-      - sa-east-1
-      - us-east-1
-      - us-east-2
-      - us-west-1
-      - us-west-2
+    excludeRegions: [{{OtherEnabledRegions}}]
     documentSets:
       - shareTargets:
           organizationalUnits:
@@ -166,23 +137,7 @@ awsConfig:
           - Sandbox
         accounts:
           - Management
-        excludedRegions:
-          - ap-northeast-1
-          - ap-northeast-2
-          - ap-northeast-3
-          - ap-south-1
-          - ap-southeast-1
-          - ap-southeast-2
-          - eu-central-1
-          - eu-north-1
-          - eu-west-1
-          - eu-west-2
-          - eu-west-3
-          - sa-east-1
-          - us-east-1
-          - us-east-2
-          - us-west-1
-          - us-west-2
+        excludedRegions: [{{OtherEnabledRegions}}]
       rules:
         - name: "{{ AcceleratorPrefix }}-s3-bucket-server-side-encryption-enabled"
           identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
@@ -531,116 +486,116 @@ cloudWatch:
       metrics:
         # CIS 1.1 – Avoid the use of the "root" account ; CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         - filterName: "{{ AcceleratorPrefix }}-RootAccountMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: CloudTrailMetrics
           metricName: RootAccount
           metricValue: "1"
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
         - filterName: "{{ AcceleratorPrefix }}-UnauthorizedAPICallsMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: '{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'
           metricNamespace: CloudTrailMetrics
           metricName: UnauthorizedAPICalls
           metricValue: "1"
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - filterName: "{{ AcceleratorPrefix }}-ConsoleSigninWithoutMFAMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: '{($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && ($.userIdentity.type = "IAMUser") && ($.responseElements.ConsoleLogin = "Success")}'
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleSigninWithoutMFA
           metricValue: "1"
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - filterName: "{{ AcceleratorPrefix }}-IAMPolicyChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}"
           metricNamespace: CloudTrailMetrics
           metricName: IAMPolicyChanges
           metricValue: "1"
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - filterName: "{{ AcceleratorPrefix }}-CloudTrailChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}"
           metricNamespace: CloudTrailMetrics
           metricName: CloudTrailChanges
           metricValue: "1"
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - filterName: "{{ AcceleratorPrefix }}-ConsoleAuthenticationFailureMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: '{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}'
           metricNamespace: CloudTrailMetrics
           metricName: ConsoleAuthenticationFailure
           metricValue: "1"
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - filterName: "{{ AcceleratorPrefix }}-DisableOrDeleteCMKMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}"
           metricNamespace: CloudTrailMetrics
           metricName: DisableOrDeleteCMK
           metricValue: "1"
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - filterName: "{{ AcceleratorPrefix }}-AWSConfigChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}"
           metricNamespace: CloudTrailMetrics
           metricName: AWSConfigChanges
           metricValue: "1"
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - filterName: "{{ AcceleratorPrefix }}-NetworkACLChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}"
           metricNamespace: CloudTrailMetrics
           metricName: NetworkACLChanges
           metricValue: "1"
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - filterName: "{{ AcceleratorPrefix }}-NetworkGatewayChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}"
           metricNamespace: CloudTrailMetrics
           metricName: NetworkGatewayChanges
           metricValue: "1"
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
         - filterName: "{{ AcceleratorPrefix }}-RouteTableChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}"
           metricNamespace: CloudTrailMetrics
           metricName: RouteTableChanges
           metricValue: "1"
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
         - filterName: "{{ AcceleratorPrefix }}-VPCChangesMetricFilter"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}"
           metricNamespace: CloudTrailMetrics
           metricName: VPCChanges
           metricValue: "1"
         - filterName: "{{ AcceleratorPrefix }}-SSOAuthUnapprovedIPMetric"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{ ($.eventSource=sso.amazonaws.com) && ($.eventName=Authenticate) && ($.sourceIPAddress != 10.10.10.*) }" # Needs Updating
           metricNamespace: CloudTrailMetrics
           metricName: SSOAuthUnapprovedIPCount
           metricValue: "1"
         - filterName: "{{ AcceleratorPrefix }}-IAMAuthUnapprovedIPMetric"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{ ($.eventName=ConsoleLogin) && ($.userIdentity.type=IAMUser) && ($.sourceIPAddress != 10.10.10.*) }" # Needs Updating
           metricNamespace: CloudTrailMetrics
           metricName: IAMAuthUnapprovedIPCount
           metricValue: "1"
         - filterName: "{{ AcceleratorPrefix }}-UnencryptedFilesystemCreatedMetric"
-          logGroupName: {{ CloudTrailLogGroup }}
+          logGroupName: "{{ CloudTrailLogGroup }}"
           filterPattern: "{ ($.eventName = CreateFileSystem) && ($.responseElements.encrypted IS FALSE) }"
           metricNamespace: CloudTrailMetrics
           metricName: UnencryptedFilesystemCreatedCount
           metricValue: "1"
   alarmSets:
     - regions:
-        - {{ AcceleratorHomeRegion }}
+        - "{{ AcceleratorHomeRegion }}"
       deploymentTargets:
         accounts:
           - Management
       alarms:
         # CIS 1.1 – Avoid the use of the "root" account ; CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         - alarmName: "{{ AcceleratorPrefix }}-CIS-1.1-RootAccountUsage"
-          alarmDescription: Alarm for usage of "root" account
+          alarmDescription: "Root account usage. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-1.1-RootAccountUsage | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.userName*0a*7c*20filter*20userIdentity.type*20*3d*20*22Root*22*20and*20eventType*20*21*3d*20*22AwsServiceEvent*22*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityLow
           metricName: RootAccount
           namespace: CloudTrailMetrics
@@ -652,7 +607,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.1-UnauthorizedAPICalls"
-          alarmDescription: Alarm for unauthorized API calls
+          alarmDescription: "Unauthorized API calls. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.1-UnauthorizedAPICalls | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*2c*20errorCode*0a*7c*20filter*20errorCode*20like*20*2fUnauthorizedOperation*2f*20or*20errorCode*20like*20*2fAccessDenied*2f*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityLow
           metricName: UnauthorizedAPICalls
           namespace: CloudTrailMetrics
@@ -664,7 +619,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.2-ConsoleSigninWithoutMFA"
-          alarmDescription: Alarm for AWS Management Console sign-in without MFA
+          alarmDescription: "Console sign-in without MFA. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.2-ConsoleSigninWithoutMFA | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20*3d*20*22ConsoleLogin*22*20and*20additionalEventData.MFAUsed*20*21*3d*20*22Yes*22*20and*20userIdentity.type*20*3d*20*22IAMUser*22*20and*20responseElements.ConsoleLogin*20*3d*20*22Success*22*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: ConsoleSigninWithoutMFA
           namespace: CloudTrailMetrics
@@ -675,7 +630,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.4-IAMPolicyChanges"
-          alarmDescription: Alarm for IAM policy changes
+          alarmDescription: "IAM policy changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.4-IAMPolicyChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20in*20*5b*22DeleteGroupPolicy*22*2c*22DeleteRolePolicy*22*2c*22DeleteUserPolicy*22*2c*22PutGroupPolicy*22*2c*22PutRolePolicy*22*2c*22PutUserPolicy*22*2c*22CreatePolicy*22*2c*22DeletePolicy*22*2c*22CreatePolicyVersion*22*2c*22DeletePolicyVersion*22*2c*22AttachRolePolicy*22*2c*22DetachRolePolicy*22*2c*22AttachUserPolicy*22*2c*22DetachUserPolicy*22*2c*22AttachGroupPolicy*22*2c*22DetachGroupPolicy*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityMedium
           metricName: IAMPolicyChanges
           namespace: CloudTrailMetrics
@@ -687,7 +642,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.5-CloudTrailChanges"
-          alarmDescription: Alarm for CloudTrail configuration changes
+          alarmDescription: "CloudTrail changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.5-CloudTrailChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20in*20*5b*22CreateTrail*22*2c*22UpdateTrail*22*2c*22DeleteTrail*22*2c*22StartLogging*22*2c*22StopLogging*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: CloudTrailChanges
           namespace: CloudTrailMetrics
@@ -699,7 +654,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.6-ConsoleAuthenticationFailure"
-          alarmDescription: Alarm exist for AWS Management Console authentication failures
+          alarmDescription: "Console auth failures. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.6-ConsoleAuthenticationFailure | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20errorMessage*0a*7c*20filter*20eventName*20*3d*20*22ConsoleLogin*22*20and*20errorMessage*20*3d*20*22Failed*20authentication*22*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityLow
           metricName: ConsoleAuthenticationFailure
           namespace: CloudTrailMetrics
@@ -711,7 +666,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.7-DisableOrDeleteCMK"
-          alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
+          alarmDescription: "CMK disable/delete. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.7-DisableOrDeleteCMK | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventSource*20*3d*20*22kms.amazonaws.com*22*20and*20eventName*20in*20*5b*22DisableKey*22*2c*22ScheduleKeyDeletion*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: DisableOrDeleteCMK
           namespace: CloudTrailMetrics
@@ -723,7 +678,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.9-AWSConfigChanges"
-          alarmDescription: Alarm for AWS Config configuration changes
+          alarmDescription: "Config changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.9-AWSConfigChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventSource*20*3d*20*22config.amazonaws.com*22*20and*20eventName*20in*20*5b*22StopConfigurationRecorder*22*2c*22DeleteDeliveryChannel*22*2c*22PutDeliveryChannel*22*2c*22PutConfigurationRecorder*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: AWSConfigChanges
           namespace: CloudTrailMetrics
@@ -735,7 +690,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.11-NetworkACLChanges"
-          alarmDescription: Alarm for changes to Network Access Control Lists (NACL)
+          alarmDescription: "NACL changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.11-NetworkACLChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20in*20*5b*22CreateNetworkAcl*22*2c*22CreateNetworkAclEntry*22*2c*22DeleteNetworkAcl*22*2c*22DeleteNetworkAclEntry*22*2c*22ReplaceNetworkAclEntry*22*2c*22ReplaceNetworkAclAssociation*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityMedium
           metricName: NetworkACLChanges
           namespace: CloudTrailMetrics
@@ -747,7 +702,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.12-NetworkGatewayChanges"
-          alarmDescription: Alarm for changes to network gateways
+          alarmDescription: "Gateway changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.12-NetworkGatewayChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20in*20*5b*22CreateCustomerGateway*22*2c*22DeleteCustomerGateway*22*2c*22AttachInternetGateway*22*2c*22CreateInternetGateway*22*2c*22DeleteInternetGateway*22*2c*22DetachInternetGateway*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityMedium
           metricName: NetworkGatewayChanges
           namespace: CloudTrailMetrics
@@ -759,7 +714,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.13-RouteTableChanges"
-          alarmDescription: Alarm for route table changes
+          alarmDescription: "Route table changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.13-RouteTableChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20in*20*5b*22CreateRoute*22*2c*22CreateRouteTable*22*2c*22ReplaceRoute*22*2c*22ReplaceRouteTableAssociation*22*2c*22DeleteRouteTable*22*2c*22DeleteRoute*22*2c*22DisassociateRouteTable*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityMedium
           metricName: RouteTableChanges
           namespace: CloudTrailMetrics
@@ -771,7 +726,7 @@ cloudWatch:
           treatMissingData: notBreaching
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
         - alarmName: "{{ AcceleratorPrefix }}-CIS-3.14-VPCChanges"
-          alarmDescription: Alarm for VPC changes
+          alarmDescription: "VPC changes. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-CIS-3.14-VPCChanges | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20in*20*5b*22CreateVpc*22*2c*22DeleteVpc*22*2c*22ModifyVpcAttribute*22*2c*22AcceptVpcPeeringConnection*22*2c*22CreateVpcPeeringConnection*22*2c*22DeleteVpcPeeringConnection*22*2c*22RejectVpcPeeringConnection*22*2c*22AttachClassicLinkVpc*22*2c*22DetachClassicLinkVpc*22*2c*22DisableVpcClassicLink*22*2c*22EnableVpcClassicLink*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityMedium
           metricName: VPCChanges
           namespace: CloudTrailMetrics
@@ -782,7 +737,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         - alarmName: "{{ AcceleratorPrefix }}-AWS-SSO-Authentication-From-Unapproved-IP"
-          alarmDescription: Alarms when someone authenticates using AWS SSO from an unauthorized IP address range.
+          alarmDescription: "SSO auth from unapproved IP. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-AWS-SSO-Authentication-From-Unapproved-IP | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventSource*20*3d*20*22sso.amazonaws.com*22*20and*20eventName*20*3d*20*22Authenticate*22*20and*20sourceIPAddress*20not*20like*20*22REPLACE_WITH_ON_PREM_IP*22*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: SSOAuthUnapprovedIPCount
           namespace: CloudTrailMetrics
@@ -793,7 +748,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         - alarmName: "{{ AcceleratorPrefix }}-AWS-IAM-Authentication-From-Unapproved-IP"
-          alarmDescription: Alarms when someone authenticates using AWS IAM from an unauthorized IP address range.
+          alarmDescription: "IAM auth from unapproved IP. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-AWS-IAM-Authentication-From-Unapproved-IP | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventName*20*3d*20*22ConsoleLogin*22*20and*20userIdentity.type*20*3d*20*22IAMUser*22*20and*20sourceIPAddress*20not*20like*20*22REPLACE_WITH_ON_PREM_IP*22*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: IAMAuthUnapprovedIPCount
           namespace: CloudTrailMetrics
@@ -804,7 +759,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         - alarmName: "{{ AcceleratorPrefix }}-AWS-Unencrypted-Filesystem-Created"
-          alarmDescription: Alarms when one or more API calls are made to create an Unencrypted filesystem (i.e. EFS) (in any account, any region of your AWS Organization).
+          alarmDescription: "Unencrypted filesystem created. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-AWS-Unencrypted-Filesystem-Created | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*0a*7c*20filter*20eventSource*20*3d*20*22elasticfilesystem.amazonaws.com*22*20and*20eventName*20*3d*20*22CreateFileSystem*22*20and*20requestParameters.encrypted*20*3d*20false*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityHigh
           metricName: UnencryptedFilesystemCreatedCount
           namespace: CloudTrailMetrics
@@ -815,7 +770,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         - alarmName: "{{ AcceleratorPrefix }}-AWS-Authorization-Failure"
-          alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
+          alarmDescription: "Authorization failures. https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#alarmsV2:alarm/{{ AcceleratorPrefix }}-AWS-Authorization-Failure | [Logs](https://console.aws.amazon.com/cloudwatch/home?region={{ AcceleratorHomeRegion }}#logsV2:logs-insights$3FqueryDetail$3D~%28end~0~start~-86400~timeType~'RELATIVE~unit~'seconds~editorString~'fields*20*40timestamp*2c*20eventName*2c*20sourceIPAddress*2c*20userIdentity.arn*2c*20errorCode*0a*7c*20filter*20errorCode*20in*20*5b*22UnauthorizedOperation*22*2c*22AccessDenied*22*5d*0a*7c*20sort*20*40timestamp*20desc*0a*7c*20limit*2010~source~%28~'{{CloudTrailLogGroup}}%29%29)"
           snsTopicName: SecurityLow
           metricName: AuthorizationFailureCount
           namespace: CloudTrailMetrics

@@ -240,7 +240,11 @@
         "payments:GetPaymentStatus",
         "payments:ListPaymentPreferences",
         "tax:ListTaxRegistrations",
-        "sustainability:*"
+        "sustainability:*",
+        "quicksight:DescribeAccountSubscription",
+        "bedrock:*",
+        "sagemaker:L*",
+        "uxc:*"
       ],
       "Resource": "*",
       "Condition": {
