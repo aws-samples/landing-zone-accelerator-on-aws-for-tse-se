@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.13.1-b] 2025-10-30
+
+### Changed
+- fix(replacements): Fix typo in Sandbox replacement region variables. Contributed by shanhyland
+
+
 ## [1.13.1-a] 2025-10-24
 
 ### Changed

@@ -1,5 +1,5 @@
 homeRegion: {{AcceleratorHomeRegion}}
-configVersion: 1.13.1-a
+configVersion: 1.13.1-b
 enabledRegions: [{{AcceleratorHomeRegion}}, {{OtherEnabledRegions}}]
 managementAccountAccessRole: OrganizationAccountAccessRole # UPDATE: If using Control Tower, set to AWSControlTowerExecution
 tags:
