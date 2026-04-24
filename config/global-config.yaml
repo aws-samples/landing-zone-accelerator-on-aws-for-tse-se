@@ -1,5 +1,5 @@
 homeRegion: {{AcceleratorHomeRegion}}
-configVersion: 1.13.1-b
+configVersion: 1.15.2-a
 enabledRegions: [{{AcceleratorHomeRegion}}, {{OtherEnabledRegions}}]
 managementAccountAccessRole: OrganizationAccountAccessRole # UPDATE: If using Control Tower, set to AWSControlTowerExecution
 tags:
@@ -7,6 +7,11 @@ tags:
     value: '{{ AcceleratorPrefix }}'
 cloudwatchLogRetentionInDays: 731
 terminationProtection: true
+defaultEventBus:
+  policy: event-bus-policies/event-bus-policy.json
+  deploymentTargets:
+    organizationalUnits:
+      - Root
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: false
@@ -34,13 +39,27 @@ controlTower:
   enable: false # UPDATE if using Control Tower, set to true
   # UPDATE If using ControlTower, uncomment the following block and set the version to ControlTower latest available version
   # landingZone:
-  #   version: '3.3'
+  #   version: '4.0'
   #   logging:
   #     loggingBucketRetentionDays: 365
   #     accessLoggingBucketRetentionDays: 3650
   #     organizationTrail: true
   #   security:
   #     enableIdentityCenterAccess: true
+centralRootUserManagement:
+  enable: true
+  capabilities:
+    rootCredentialsManagement: true
+    allowRootSessions: true
+backup:
+  vaults:
+    - name: "{{ AcceleratorPrefix }}-BackupVault"
+      deploymentTargets:
+        organizationalUnits:
+          - Infrastructure
+          - Dev
+          - Test
+          - Prod
 logging:
   account: LogArchive
   cloudtrail:

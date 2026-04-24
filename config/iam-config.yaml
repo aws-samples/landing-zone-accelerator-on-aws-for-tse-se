@@ -67,6 +67,16 @@ roleSets:
           customerManaged:
             - "{{ AcceleratorPrefix }}-Default-SSM-S3-Policy"
         boundaryPolicy: "{{ AcceleratorPrefix }}-Default-Boundary-Policy"
+      - name: "{{ AcceleratorPrefix }}-Backup-Role"
+        assumedBy:
+          - type: service
+            principal: backup.amazonaws.com
+        policies:
+          awsManaged:
+            - service-role/AWSBackupServiceRolePolicyForBackup
+            - service-role/AWSBackupServiceRolePolicyForRestores
+            - AWSBackupServiceRolePolicyForS3Backup
+            - AWSBackupServiceRolePolicyForS3Restore
   - deploymentTargets:
       accounts:
         - Perimeter

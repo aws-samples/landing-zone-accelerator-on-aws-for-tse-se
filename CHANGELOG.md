@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.15.2-a] 2026-04-30
+
+### Added
+
+- feat(scp): Allow AWS PricingPlanManager Service in sensitive, unclassified, and sandbox guardrails SCPs. This enables Cloudfront flat-rate pricing.
+- feat(org): Added Tagging Policies to support AWS Backups. Review and update primary-backup-plan.json for lifecycle retentions.
+- feat(global-config): Enabled Amazon EventBridge Default Event Bus Configurations.
+- feat(global-config): Added Central Root User Management.
+
+### Changed
+
+- feat(global-config): Update Control Tower landing zone version to 4.0.
+
+
 ## [1.13.1-b] 2025-10-30
 
 ### Changed

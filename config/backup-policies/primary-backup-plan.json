@@ -1,0 +1,284 @@
+{
+  "plans": {
+    "Continuous_Plan": {
+      "regions": {
+        "@@append": ${ACCEL_LOOKUP::CUSTOM:BackupEnabledRegions}
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5/1 ? * * *)"
+          },
+          "lifecycle": {
+            "delete_after_days": {
+              "@@assign": "35"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-BackupVault"
+          },
+          "enable_continuous_backup": {
+            "@@assign": "true"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "S3BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Continuous"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "Hourly_Plan": {
+      "regions": {
+        "@@append": ${ACCEL_LOOKUP::CUSTOM:BackupEnabledRegions}
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5/1 ? * * *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "30"
+            },
+            "delete_after_days": {
+              "@@assign": "365"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Hourly"
+              ]
+            }
+          },
+          "S3_Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "S3BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Hourly"
+              ]
+            }
+          }
+        }
+      },
+      "advanced_backup_settings": {
+        "ec2": {
+          "windows_vss": {
+            "@@assign": "enabled"
+          }
+        }
+      }
+    },
+    "Daily_Plan": {
+      "regions": {
+        "@@append": ${ACCEL_LOOKUP::CUSTOM:BackupEnabledRegions}
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5 ? * * *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "30"
+            },
+            "delete_after_days": {
+              "@@assign": "365"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Daily"
+              ]
+            }
+          },
+          "S3_Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "S3BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Daily"
+              ]
+            }
+          }
+        }
+      },
+      "advanced_backup_settings": {
+        "ec2": {
+          "windows_vss": {
+            "@@assign": "enabled"
+          }
+        }
+      }
+    },
+    "Weekly_Plan": {
+      "regions": {
+        "@@append": ${ACCEL_LOOKUP::CUSTOM:BackupEnabledRegions}
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5 ? * 1 *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "30"
+            },
+            "delete_after_days": {
+              "@@assign": "365"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Weekly"
+              ]
+            }
+          },
+          "S3_Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "S3BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Weekly"
+              ]
+            }
+          }
+        }
+      },
+      "advanced_backup_settings": {
+        "ec2": {
+          "windows_vss": {
+            "@@assign": "enabled"
+          }
+        }
+      }
+    },
+    "Monthly_Plan": {
+      "regions": {
+        "@@append": ${ACCEL_LOOKUP::CUSTOM:BackupEnabledRegions}
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5 1 * ? *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "60"
+            },
+            "delete_after_days": {
+              "@@assign": "730"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Monthly"
+              ]
+            }
+          },
+          "S3_Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:${PARTITION}:iam::$account:role/${ACCEL_LOOKUP::CUSTOM:AcceleratorPrefix}-Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "S3BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Monthly"
+              ]
+            }
+          }
+        }
+      },
+      "advanced_backup_settings": {
+        "ec2": {
+          "windows_vss": {
+            "@@assign": "enabled"
+          }
+        }
+      }
+    }
+  }
+}

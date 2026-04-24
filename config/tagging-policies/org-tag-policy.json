@@ -1,0 +1,22 @@
+{
+  "tags": {
+    "BackupPlan": {
+      "tag_key": {
+        "@@assign": "BackupPlan"
+      },
+      "tag_value": {
+        "@@assign": ["Hourly", "Daily", "Weekly", "Monthly"]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "ec2:instance",
+          "ec2:volume",
+          "dynamodb:*",
+          "elasticfilesystem:*",
+          "fsx:file-system",
+          "storagegateway:gateway"
+        ]
+      }
+    }
+  }
+}

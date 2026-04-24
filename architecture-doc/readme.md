@@ -42,6 +42,7 @@ This document is intended to outline the technical measures that are delivered b
   - [3.5. Functional (Workload) Accounts](#35-functional-workload-accounts)
   - [3.6. Account Level Security Settings](#36-account-level-security-settings)
   - [3.7. Private Marketplace](#37-private-marketplace)
+  - [3.8. Tagging](#38-tagging)
 - [4. Authorization and Authentication](#4-authorization-and-authentication)
   - [4.1. Overview](#41-overview)
   - [4.2. Relationship to the Organization Management (root) AWS Account](#42-relationship-to-the-organization-management-root-aws-account)
@@ -375,6 +376,47 @@ The _Trusted Secure Enclaves Sensitive Edition Architecture_ enables certain acc
 The _Trusted Secure Enclaves Sensitive Edition Architecture_ enables the AWS Private Marketplace for the organization as part of the TSE-SE installation process. Private Marketplace allows administrators to govern which products they want their users to run on AWS by making it possible to see only products that have been allow-listed by the organization based on compliance with an organization's security and procurement policies. When Private Marketplace is enabled, it will replace the standard AWS Marketplace for all users, with the new custom branded and curated Private Marketplace.
 
 ![PMP](./images/pmp.png)
+
+## 3.8. Tagging
+
+Resource tagging is critical for effective cloud governance, but organizations routinely struggle with inconsistent tag implementation, tag value drift, and difficulties enforcing standardization across large environments. Without a structured tagging strategy, organizations face challenges with cost allocation, ownership identification, automated operations, and compliance tracking. These issues compound in multi-account environments where different teams may implement conflicting tagging approaches.
+
+This configuration addresses these challenges by implementing a comprehensive tagging governance framework through AWS Organizations Tag Policies. This approach centralizes tag definition and enforcement, ensuring consistent metadata across your entire AWS environment while enabling powerful automation capabilities including the backup strategy described in the previous section.
+
+### Tag Policies
+
+Traditional tagging approaches rely on voluntary compliance with standards, leading to inconsistent implementation and limited usefulness of tags for operational purposes. This configuration solves this through AWS Organizations Tag Policies that define and enforce standardized tagging practices from a central control point.
+
+Tag policies specify which tag keys are required, what values are acceptable, and which resources must implement specific tags. This ensures that critical operational tags like `BackupPlan` maintain consistent formatting and values across all accounts. The configuration defines these policies in JSON files that are attached to specific OUs, creating a hierarchical enforcement model that can be tailored to different parts of your organization.
+
+This config implements two complementary tag policies that work together to create a consistent backup selection framework:
+
+#### Organization Tag Policy (`name: OrgTagPolicy`)
+
+The Organization Tag Policy establishes governance over the `BackupPlan` tag for core infrastructure resources, ensuring standardized backup selection across accounts. Without this policy, organizations typically face inconsistent backup schedules, resource protection gaps, and difficulties identifying which recovery strategy applies to specific resources.
+
+The policy enforces that when resources are tagged with `BackupPlan`, the value must be one of the approved backup frequencies: `Hourly`, `Daily`, `Weekly`, or `Monthly`. This standardization enables automated backup selection and prevents configuration errors that could lead to inappropriate backup frequencies for critical resources.
+
+This policy applies to the following resource types across both Infrastructure, Dev, Test, Prod OUs:
+
+* EC2 instances - For compute workload protection
+* EBS volumes - For persistent storage protection
+* DynamoDB tables - For NoSQL database protection
+* Amazon EFS file systems - For shared file system protection
+* Amazon FSx file systems - For specialized file system protection
+* AWS Storage Gateway resources - For hybrid storage protection
+
+By implementing this policy at the OU level, the config ensures that both infrastructure services and business applications follow the same tagging standards, creating consistency across your entire AWS footprint.
+
+#### S3 Tag Policy (`name: S3TagPolicy`)
+
+The S3 Tag Policy addresses the unique continuous backup capabilities of Amazon S3. Organizations without this specialized policy often struggle with inconsistent approaches to S3 data protection and inability to leverage S3-specific backup features.
+
+This policy enforces that S3 buckets tagged with `S3BackupPlan` must use one of the approved values: `Continuous`, `Hourly`, `Daily`, `Weekly`, or `Monthly`. The inclusion of the `Continuous` value enables point-in-time recovery for S3 data, a capability not available for most other resource types.
+
+This specialized policy complements the Organization Tag Policy, ensuring that S3 buckets across both Infrastructure and Workloads OUs follow the same standardized approach while accommodating S3-specific capabilities.
+
+Review Amazon S3 backup [documentation](https://docs.aws.amazon.com/aws-backup/latest/devguide/s3-backups.html) for bucket prequisities (e.g. Versioning enabled).
 
 # 4. Authorization and Authentication
 

@@ -1,0 +1,26 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "GRER",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "events:PutEvents",
+                "events:PutTargets",
+                "events:PutRule"
+            ],
+            "Resource": "arn:${PARTITION}:events:${REGION}:${ACCOUNT_ID}:event-bus/default",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                },
+                "Bool": {
+                    "aws:PrincipalIsAWSService": "true"
+                }
+            }
+        }
+    ]
+}

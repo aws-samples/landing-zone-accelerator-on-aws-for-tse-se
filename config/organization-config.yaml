@@ -109,5 +109,62 @@ serviceControlPolicies:
       organizationalUnits:
         - Security
         - Infrastructure
-taggingPolicies: []
-backupPolicies: []
+taggingPolicies:
+  # AWS Organizations Tagging Policies
+  # - Enables tag policy for values of backup plans only
+  # - This will only enforce the tag value specified matches one of the backup plans
+  #   - Redshift, RDS, Timestream, DocumentDB, Neptune cannot currently be enforced
+  #   - VMWare VMs are outside of scope for tag enforcement
+  - name: OrgTagPolicy
+    description: Organization Tagging Policy
+    policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+  # AWS Backup continuous backup is only supported for S3 & RDS but RDS isn't supported by tag policies.
+  #   - https://docs.aws.amazon.com/aws-backup/latest/devguide/point-in-time-recovery.html
+  - name: S3TagPolicy
+    description: S3 Tagging Policy
+    policy: tagging-policies/s3-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+backupPolicies:
+  # AWS Backup Configuration
+  # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
+  # Syntax: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html?icmpid=docs_orgs_console
+  # - Retention is set for 1 year
+  #   - Continuous is set to max of 35 days
+  #   - Monthly is set for two years
+  # - VSS Enabled (Windows) for all plans
+  #   - https://docs.aws.amazon.com/aws-backup/latest/devguide/windows-backups.html
+  # - Available Backup Plans
+  #   - Continuous
+  #   - Hourly
+  #   - Daily
+  #   - Weekly
+  #   - Monthly
+  # - Backup Window
+  #   - Set to AWS Backup default of 5am UTC
+  # - Tag policy with list of backup plans has been created for you, if changes in policies are made you should also update this tag policy too
+  - name: "{{ AcceleratorPrefix }}-BackupPolicy"
+    description: Organization Backup Policy
+    policy: backup-policies/primary-backup-plan.json
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod

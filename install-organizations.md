@@ -31,7 +31,7 @@ Follow the instructions on [Enabling centralized root access](https://docs.aws.a
 
 For more information reference the [Taking a privileged action on a member account](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user-privileged-task.html) section of the IAM User Guide.
 
-## 2.2 Deploy the installer CloudFormation stack
+## 2.3 Deploy the installer CloudFormation stack
 Click the **Launch Solution** button on [Step 1. Launch the stack](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html) page. **Ensure the Region is set to your desired home Region, as it typically defaults to US East (N. Virginia)**
 
 Name the stack `AWSAccelerator-InstallerStack` and review the template’s parameters and enter or adjust the default values as needed. For example:
@@ -47,12 +47,12 @@ Name the stack `AWSAccelerator-InstallerStack` and review the template’s param
 
 Leave all other values as default, unless you have specific reasons to customize.
 
-## 2.3 Wait for pipeline to complete
+## 2.4 Wait for pipeline to complete
 [Step 2. Await initial environment deployment](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-2.-await-initial-environment-deployment.html)
 
 - Wait for the successful completion of the `AWSAccelerator-Pipeline` pipeline.
 
-## 2.4 Enable IAM Identity Center in the management account
+## 2.5 Enable IAM Identity Center in the management account
 
 1. Login into the management account
 2. Make sure the region in the console is set to your home AWS Region
