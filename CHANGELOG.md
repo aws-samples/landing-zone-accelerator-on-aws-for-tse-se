@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.16.0-a] 2026-08-14
+
+### Changed
+
+- fix(docs): Fixed documentation title numbering.
+- fix(scp): Fixed ARN format of LOG2 statement in Guardrails-Part1.
+- fix(scp): Synchronized the SEC statement in Guardrails-Part0-WkldOUs with Guardrails-Part0-CoreOUs.
+
+
 ## [1.15.2-a] 2026-04-30
 
 ### Added

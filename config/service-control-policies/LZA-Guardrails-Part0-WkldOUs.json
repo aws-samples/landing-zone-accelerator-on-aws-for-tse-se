@@ -161,9 +161,8 @@
         "securityhub:InviteMembers",
         "securityhub:CreateMembers",
         "securityhub:Disable*",
-        "securityhub:DisassociateFromMasterAccount",
+        "securityhub:Disassociate*",
         "securityhub:DeleteInsight",
-        "securityhub:DisassociateMembers",
         "securityhub:DeleteActionTarget",
         "securityhub:BatchDisableStandards",
         "securityhub:UpdateSecurityHubConfiguration",
@@ -182,12 +181,12 @@
         "macie2:UpdateMacieSession",
         "macie2:UpdateMemberSession",
         "macie2:UpdateOrganizationConfiguration",
-        "fms:DisassociateAdminAccount",
+        "fms:Disassociate*",
         "access-analyzer:DeleteAnalyzer",
         "account:EnableRegion",
         "account:DisableRegion",
-        "iam:DeleteAccountPasswordPolicy",
-        "iam:UpdateAccountPasswordPolicy",
+        "iam:DeleteAccountPass*",
+        "iam:UpdateAccountPass*",
         "ec2:CreateDefaultVpc",
         "ec2:DisableEbsEncryptionByDefault",
         "s3:PutAccountPublicAccessBlock",
@@ -199,7 +198,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     }
