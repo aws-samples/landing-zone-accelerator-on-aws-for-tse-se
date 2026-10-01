@@ -1,24 +1,43 @@
-# Trusted Secure Enclaves Sensitive Edition (TSE-SE)
+# Trusted Secure Enclaves — Sensitive Edition (TSE-SE)
 
-## Overview
-**The Landing Zone Accelerator on AWS (LZA)** for _Trusted Secure Enclaves Sensitive Edition (TSE-SE)_ is an industry specific deployment of the [Landing Zone Accelerator on AWS](https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/) targeting sensitive level workloads.
+> ### Important: how TSE-SE is delivered is changing
+> - The all-in-one TSE-SE configuration in this repository is now in **maintenance mode** — with support ending in 2027
+> - The recommended way to deliver TSE-SE is now to deploy the **[LZA Universal Configuration](https://github.com/aws/lza-universal-configuration)** (UC) as your secure baseline, then apply the sensitive-tier controls documented in the **[uplift guide](./uplift-to-tse-se/README.md)**
+> - UC is built and maintained by the **LZA service team** and is covered by **AWS Support**, so you get current LZA features and keep the security outcomes TSE-SE promised
+>
+> New here? Start with **[What's changing and why](./whats-changing.md)**.
 
-National security, defence, and national law enforcement organizations around the world need the scale, global footprint, agility, and services that cloud brings to their critical missions—all while they are required to meet stringent security and compliance requirements for their data. Increasingly, these organizations leverage the AWS global hyper-scale cloud to deliver their missions while keeping their sensitive data and workloads secure. To help you accelerate these sensitive missions in cloud, we developed Trusted Secure Enclaves for National Security, Defence and National Law Enforcement.
+- **New to TSE-SE** > [Delivering TSE-SE on the LZA UC baseline](./deliver-on-uc.md)
+- **Just exploring the architecture** > [TSE-SE Reference Architecture](./architecture-doc/readme.md)
 
-The _Trusted Secure Enclaves Sensitive Edition (TSE-SE) Reference Architecture_ is a comprehensive, multi-account AWS cloud architecture targeting sensitive level workloads. This architecture was designed in collaboration with our national security; defence; national law enforcement; and federal, provincial, and municipal government customers to accelerate compliance with their strict and unique security and compliance requirements. The _TSE-SE Reference Architecture_ was designed to help customers address central identity and access management, governance, data security, comprehensive logging, and network design/segmentation in alignment with security frameworks such as NIST 800-53, ITSG-33, FEDRAMP Moderate, CCCS-Medium, IRAP, and other sensitive or medium level security profiles.
+## What is TSE-SE
 
-Please refer to the TSE-SE [Reference Architecture document](./architecture-doc/readme.md) for the full detailed design.
+The _Trusted Secure Enclaves — Sensitive Edition_ is a multi-account AWS reference architecture for **sensitive-level workloads**. It was designed with national security, defence, law enforcement, and federal, provincial and municipal government customers to accelerate compliance with strict security requirements, and aligns with frameworks such as NIST SP 800-53, ITSG-33, FedRAMP Moderate, CCCS-Medium, IRAP and other sensitive/medium-level profiles.
 
-## Deployment overview
+TSE-SE is both a reference architecture (the design and the reasoning behind it) and a set of security outcomes (what the architecture achieves).
 
-AWS developed the sample configuration files herein for use with the Landing Zone Accelerator on AWS (LZA) solution. Using these sample config files with LZA will automate the deployment of the prescriptive and opinionated _Trusted Secure Enclaves Sensitive Edition_ reference architecture.
+## Recommended way to deliver TSE-SE
 
-Deploying the TSE-SE with the LZA automation engine reduces customers foundational build effort by months over manual approaches. It allows customers to rapidly establish a baseline set of technical security controls in alignment with sensitive security frameworks. The TSE-SE is deployed by customers on the customer side of the responsibility model and builds on the [security of the AWS cloud](https://aws.amazon.com/compliance/services-in-scope/).
+To implement the TSE-SE reference architecture:
 
-The sample config files define a log retention period of 2 years based on consultation with regional policy and cybersecurity authorities.  Customers are encouraged to consider defining longer retention periods, such as 10 years, so that you'll have the data you need to investigate and reconstruct events long after they occur.
+1. **Deploy the Landing Zone Accelerator Universal Configuration baseline** 
+2. **Apply the sensitive-tier controls** which UC leaves optional (for example, per-account KMS keys) to reach the security outcomes your sensitive workloads need.
 
-Customers are encouraged to work with their local AWS Account Teams to learn more about customizing this configuration, to learn more about the TSE-SE reference architecture, the Landing Zone Accelerator on AWS solution, or global national security and defense solutions.
+See the **[Uplift guide](./uplift-to-tse-se/README.md)** for the sensitive-tier controls to apply.
 
--  [Configuration files and installation instructions](./install.md)
--  [Instructions for version updates](./update-instructions.md)
--  [FAQ](./documentation/FAQ.md)
+## Documentation map
+
+| Document | For | What it covers |
+|---|---|---|
+| [What's changing](./whats-changing.md) | Everyone | The UC baseline, the support model, and an FAQ |
+| [Reference Architecture](./architecture-doc/readme.md) | Everyone | The TSE-SE design and the risk reasoning behind it |
+| [Uplift guide](./uplift-to-tse-se/README.md) | Implementers | Configuration guide: the file, property, and targets for each sensitive-tier control |
+| [Delivering TSE-SE on LZA UC](./deliver-on-uc.md) | New customers | How to uplift the UC baseline for sensitive workloads |
+| [Installation and update guides](./install.md) | All-in-one customers | Installing, updating, and post-deployment steps for the original all-in-one configuration |
+| [FAQ](./documentation/FAQ.md) | Everyone | Frequently asked questions about the TSE-SE configuration |
+
+## Support and lifecycle
+
+- **The TSE-SE configuration in this repository is in maintenance mode.** It is supported ending in 2027. To keep gaining new LZA features and the broader security outcomes UC adds (data-perimeter RCPs and others) adopt the UC baseline.
+- **The LZA Universal Configuration is actively maintained** by the LZA service team and receives new LZA features and fixes.
+- **AWS Support** covers the LZA solution and the Universal Configuration. For architecture and control guidance specific to sensitive workloads, work with your AWS account team.

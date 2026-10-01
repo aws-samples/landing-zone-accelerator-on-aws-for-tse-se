@@ -456,6 +456,8 @@ vpcs:
         netmaskLength: 20
     defaultSecurityGroupRulesDeletion: true
     internetGateway: true
+    queryLogs:
+      - accelerator-query-logs
     routeTables:
       - name: IGW-Ingress-Routes
         gatewayAssociation: internetGateway
@@ -665,6 +667,8 @@ vpcs:
       - ipamPoolName: "{{ AcceleratorPrefix }}-home-region-workload-dev-pool"
         netmaskLength: 16
     defaultSecurityGroupRulesDeletion: true
+    queryLogs:
+      - accelerator-query-logs
     routeTables:
       - name: Dev
         routes:
@@ -1002,6 +1006,8 @@ vpcs:
       - ipamPoolName: "{{ AcceleratorPrefix }}-home-region-core-services-prod-pool"
         netmaskLength: 19
     defaultSecurityGroupRulesDeletion: true
+    queryLogs:
+      - accelerator-query-logs
     routeTables:
       - name: Central
         routes:
@@ -1280,6 +1286,8 @@ vpcs:
       - ipamPoolName: "{{ AcceleratorPrefix }}-home-region-workload-test-pool"
         netmaskLength: 16
     defaultSecurityGroupRulesDeletion: true
+    queryLogs:
+      - accelerator-query-logs
     routeTables:
       - name: Test
         routes:
@@ -1584,6 +1592,8 @@ vpcs:
       - ipamPoolName: "{{ AcceleratorPrefix }}-home-region-workload-prod-pool"
         netmaskLength: 16
     defaultSecurityGroupRulesDeletion: true
+    queryLogs:
+      - accelerator-query-logs
     routeTables:
       - name: Prod
         routes:
