@@ -128,7 +128,10 @@
       "Action": [
         "guardduty:AcceptInvitation",
         "guardduty:DeclineInvitations",
-        "guardduty:Delete*",
+        "guardduty:DeleteDetector",
+        "guardduty:DeleteInvitations",
+        "guardduty:DeleteMembers",
+        "guardduty:DeletePublishingDestination",
         "guardduty:Disassociate*",
         "guardduty:StopMonitoringMembers",
         "guardduty:UpdateDetector",

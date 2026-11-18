@@ -101,6 +101,9 @@ centralSecurityServices:
           # Enforces HTTPS on S3 Buckets
           - name: "{{ AcceleratorPrefix }}-S3-Enforce-HTTPS"
             template: ssm-documents/s3-enforce-https.yaml
+          # Sets the Amazon Bedrock account data retention mode in each named region
+          - name: "{{ AcceleratorPrefix }}-Set-Bedrock-Data-Retention"
+            template: ssm-documents/bedrock-set-data-retention.yaml
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:
@@ -274,6 +277,48 @@ awsConfig:
               - name: LogDestination
                 value: ${ACCEL_LOOKUP::Bucket:elbLogs}
                 type: StringList
+        ## Amazon Bedrock account data retention is not an AWS Config resource type,
+        ## so this rule is periodic only and has no triggering resource.
+        ## TargetRegions is the list of regions the rule INSPECTS, which is separate
+        ## from the regions the rule is DEPLOYED to above. Extend it to every region
+        ## where Bedrock is used, and keep the value identical in inputParameters and
+        ## in remediation.parameters, otherwise the rule reports a region the
+        ## remediation never corrects.
+        - name: "{{ AcceleratorPrefix }}-bedrock-data-retention"
+          type: Custom
+          description: Custom rule for checking the Amazon Bedrock account data retention mode
+          inputParameters:
+            TargetRegions: "{{ AcceleratorHomeRegion }}"
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/bedrock-data-retention.zip
+              handler: index.handler
+              runtime: nodejs22.x
+              rolePolicyFile: custom-config-rules/bedrock-data-retention-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: None
+              lookupValue:
+                - AWS::S3::Bucket # placeholder as 'None' is caught by LZA config validation; not used when configurationChanges:false
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+          remediation:
+            rolePolicyFile: custom-config-rules/bedrock-data-retention-remediation-role.json
+            automatic: true
+            targetId: "{{ AcceleratorPrefix }}-Set-Bedrock-Data-Retention"
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: TargetRegions
+                value: "{{ AcceleratorHomeRegion }}"
+                type: String
+              - name: RetentionMode
+                value: none
+                type: String
     - deploymentTargets:
         ##  Section for config rules across all OUs except Sandbox + Management Account
         ## Rules not supported in ap-northeast-3 AND ca-west-1

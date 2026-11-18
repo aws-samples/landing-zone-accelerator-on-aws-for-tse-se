@@ -86,3 +86,7 @@ Refer to the [AWS Directory Service documentation](https://docs.aws.amazon.com/d
 2. Edit the `iam-config.yaml` file to un-comment and edit as needed the `activeDirectoryConfigurationInstance` block under `managedActiveDirectories`. Send your configuration changes to CodeCommit or S3
 
 3. Release the `AWSAccelerator-Pipeline` to finalize the deployment of the Active Directory configuration instance.
+
+
+## 4.6 Review Logging Optimization
+Review the CloudTrail [Logging Optimization](./documentation/1.17.0-optimization-updates.md) and apply if necessary.

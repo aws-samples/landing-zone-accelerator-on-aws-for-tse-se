@@ -1,0 +1,114 @@
+description: Sets the Amazon Bedrock account data retention mode in each named region
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  TargetRegions:
+    type: String
+    description: (Required) Comma separated list of regions to set the retention mode in.
+  RetentionMode:
+    type: String
+    description: (Optional) The data retention mode to set. Constrained to none
+      because the Guardrails-Part-1 BDR1 statement denies setting any other
+      mode, so a wider set would pass validation and then fail on the SCP.
+    default: none
+    allowedValues:
+      - none
+  AutomationAssumeRole:
+    type: String
+    description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
+    default: ""
+mainSteps:
+  # The retention mode is per-region, so every governed region is set in one run.
+  # aws:executeAwsApi would only reach the region the automation executes in, and
+  # the operation is newer than the SDK it would use. This runs inline Python and
+  # signs the request with botocore, which the SSM script runtime provides.
+  - name: PutAccountDataRetention
+    action: aws:executeScript
+    timeoutSeconds: 600
+    inputs:
+      Runtime: python3.12
+      Handler: handler
+      InputPayload:
+        TargetRegions: "{{TargetRegions}}"
+        RetentionMode: "{{RetentionMode}}"
+      Script: |
+        import json
+        import time
+        import urllib.error
+        import urllib.request
+
+        import boto3
+        from botocore.auth import SigV4Auth
+        from botocore.awsrequest import AWSRequest
+
+        MAX_ATTEMPTS = 3
+        RETRY_STATUS = (429, 500, 502, 503, 504)
+
+
+        def put_mode(creds, region, mode):
+            url = f"https://bedrock.{region}.amazonaws.com/data-retention"
+            body = json.dumps({"mode": mode})
+            signed = AWSRequest(method="PUT", url=url, data=body,
+                                headers={"Content-Type": "application/json"})
+            SigV4Auth(creds.get_frozen_credentials(), "bedrock",
+                      region).add_auth(signed)
+            request = urllib.request.Request(
+                url=url, data=body.encode("utf-8"),
+                headers=dict(signed.headers), method="PUT")
+            with urllib.request.urlopen(request, timeout=10) as response:
+                return json.loads(response.read().decode()).get("mode", mode)
+
+
+        def put_mode_with_retry(creds, region, mode):
+            # aws:executeScript does not retry throttled AWS API calls, so the
+            # backoff is implemented here rather than left to the runtime.
+            for attempt in range(1, MAX_ATTEMPTS + 1):
+                try:
+                    return put_mode(creds, region, mode)
+                except urllib.error.HTTPError as error:
+                    retryable = error.code in RETRY_STATUS
+                    detail = f"HTTP {error.code}"
+                except urllib.error.URLError as error:
+                    retryable = True
+                    detail = f"URLError {error.reason}"
+                if not retryable or attempt == MAX_ATTEMPTS:
+                    raise RuntimeError(f"{detail} after {attempt} attempt(s)")
+                time.sleep(attempt)
+
+
+        def handler(events, context):
+            mode = events.get("RetentionMode") or "none"
+            regions = [r.strip() for r in events["TargetRegions"].split(",")
+                       if r.strip()]
+            if not regions:
+                raise ValueError("TargetRegions resolved to an empty list")
+
+            creds = boto3.Session().get_credentials()
+            if creds is None:
+                raise ValueError("no AWS credentials available to the automation")
+
+            applied = {}
+            failed = {}
+            # Every region is attempted even when an earlier one fails, so that
+            # one unreachable region cannot leave the rest of them unset.
+            for region in regions:
+                try:
+                    applied[region] = put_mode_with_retry(creds, region, mode)
+                    print(f"{region} mode={applied[region]}")
+                except Exception as error:
+                    failed[region] = str(error)
+                    print(f"{region} failed: {error}")
+
+            # Fail the step so the remediation is retried, but only after every
+            # region has had an attempt.
+            if failed:
+                raise RuntimeError(
+                    f"applied={json.dumps(applied, sort_keys=True)} "
+                    f"failed={json.dumps(failed, sort_keys=True)}")
+
+            return {"Applied": json.dumps(applied, sort_keys=True)}
+    outputs:
+      - Name: Applied
+        Selector: $.Payload.Applied
+        Type: String
+    isEnd: true

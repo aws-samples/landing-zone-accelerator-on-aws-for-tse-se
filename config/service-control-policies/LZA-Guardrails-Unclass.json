@@ -188,6 +188,7 @@
       "NotAction": [
         "a4b:*",
         "access-analyzer:*",
+        "artifact:*",
         "aws-marketplace-management:*",
         "aws-marketplace:*",
         "budgets:*",
@@ -244,6 +245,7 @@
         "sustainability:*",
         "quicksight:DescribeAccountSubscription",
         "bedrock:*",
+        "bedrock-mantle:*",
         "sagemaker:L*",
         "uxc:*"
       ],

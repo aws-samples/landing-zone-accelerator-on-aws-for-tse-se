@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [v1.17.0-a] 2026-11-18
+
+### Added
+
+- feat(bedrock): Enforce zero data retention for Amazon Bedrock. Adds SCP statements to Guardrails-Part-1 denying any account or project data retention mode other than `none`, covering both the Bedrock control plane (`bedrock:PutAccountDataRetention`) and the Mantle endpoint (`bedrock-mantle:PutAccountDataRetention`, `CreateProject`, `UpdateProject`). Adds a periodic custom AWS Config rule that reads the account data retention mode in each region named by its `TargetRegions` parameter, and an SSM remediation document that sets any region not already at `none`. An SCP prevents changing the mode but does not set it: new accounts and newly enabled Regions default to `inherit`, and the mode is configured per Region, so review `TargetRegions` in security-config.yaml and extend it to every Region where Bedrock is used.
+- feat(scp): Modify SCPs to add bedrock-mantle access along with existing bedrock.
+- feat(scp): Added AWS Artifact (artifact:*) to the GBL1 global service exemptions in the Sensitive, Unclassified and Sandbox guardrails, enabling AWS Artifact access from member accounts.
+- doc(readme): Added documentation to optimize cloudtrail. Review [Optimize](./documentation/1.17.0-optimization-updates.md)
+
+### Changed
+
+- fix(rql): Associate the `accelerator-query-logs` Route53 Resolver Query Logging configuration with all shared VPCs.
+
+
 ## [1.16.0-a] 2026-08-14
 
 ### Changed

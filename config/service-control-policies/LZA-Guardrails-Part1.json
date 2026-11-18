@@ -237,6 +237,32 @@
           "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"]
         }
       }
+    },
+    {
+      "Sid": "BDR1",
+      "Effect": "Deny",
+      "Action": "bedrock:PutAccountDataRetention",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "bedrock:DataRetentionMode": "none"
+        }
+      }
+    },
+    {
+      "Sid": "BDR2",
+      "Effect": "Deny",
+      "Action": [
+        "bedrock-mantle:PutAccountDataRetention",
+        "bedrock-mantle:CreateProject",
+        "bedrock-mantle:UpdateProject"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "bedrock-mantle:DataRetentionMode": "none"
+        }
+      }
     }
   ]
 }
